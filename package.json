@@ -1,0 +1,32 @@
+{
+  "name": "copy",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.10.0",
+  "description": "",
+  "author": "2531800823@qq.com",
+  "license": "ISC",
+  "keywords": [],
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "dev:web": "pnpm --filter web dev",
+    "dev:desktop": "pnpm -F  desktop dev",
+    "start": "npm-run-all --parallel dev:web dev:desktop",
+    "build:web": "pnpm --filter web build",
+    "build:desktop": "pnpm -F  desktop build",
+    "build": "pnpm build:web && pnpm build:desktop"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.12.0",
+    "@eslint-react/eslint-plugin": "^1.48.5",
+    "eslint": "^9.24.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "npm-run-all": "^4.1.5",
+    "simple-git-hooks": "^2.13.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "echo liu"
+  }
+}

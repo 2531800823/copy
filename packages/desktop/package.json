@@ -1,0 +1,24 @@
+{
+  "name": "desktop",
+  "type": "module",
+  "version": "0.0.1-dev3",
+  "private": true,
+  "description": "Electron desktop application",
+  "author": "2531800823@qq.com",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && electron-builder -- --dir",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "electron": "^35.1.5",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.6",
+    "vite-plugin-electron": "^0.28.6",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  }
+}

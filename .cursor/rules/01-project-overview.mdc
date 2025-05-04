@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 项目概述
+
+这是一个包含两个主要包的 monorepo 项目：
+
+1. `web` - 一个 React 网页应用
+2. `desktop` - 一个基于 Electron 的桌面应用
+
+## 项目结构
+
+- [package.json](mdc:package.json) - 根项目配置
+- [pnpm-workspace.yaml](mdc:pnpm-workspace.yaml) - 工作区配置
+- [packages/web/](mdc:packages/web) - Web 应用子包
+- [packages/desktop/](mdc:packages/desktop) - 桌面应用子包
+
+其中桌面端的包加载的页面是在 @packages/web/  中
