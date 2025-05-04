@@ -1,12 +1,11 @@
 import type { FC } from 'react'
 import type { Tag } from '../../../types';
 import { Modal, Radio, RadioGroup, TextArea } from '@douyinfe/semi-ui';
-import React, { useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast';
+import { useState } from 'react'
+import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 
 import useCardStore from '../../../store/useCardStore';
-import { Card } from '../../../types'
 
 interface ImportJsonProps {
   visible: boolean
@@ -48,7 +47,7 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
     // 验证数据通过
     setErrorMsg('');
     return true;
-  }
+  };
 
   /**
    * 导出当前数据为备份
@@ -65,7 +64,7 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
     localStorage.setItem(`cards-backup-${timestamp}`, JSON.stringify(backupData));
 
     return timestamp;
-  }
+  };
 
   /**
    * 处理导入逻辑
@@ -192,6 +191,6 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
       </div>
     </Modal>
   );
-}
+};
 
 export default ImportJsonModal

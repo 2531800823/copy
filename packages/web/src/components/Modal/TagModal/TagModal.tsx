@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { Input, Modal } from '@douyinfe/semi-ui'
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import useCardStore from '../../../store/useCardStore'
 
@@ -17,9 +17,9 @@ const TagModal: FC<TagModalProps> = (props) => {
   const [name, setName] = useState('');
 
   const handleOk = () => {
-      console.log(name);
-      const newId = uuidv4();
-      
+    console.log(name);
+    const newId = uuidv4();
+
     addTag({
       id: newId,
       name,
@@ -27,7 +27,7 @@ const TagModal: FC<TagModalProps> = (props) => {
     })
     onOk();
 
-  };
+  }
 
   return (
     <Modal
@@ -41,6 +41,6 @@ const TagModal: FC<TagModalProps> = (props) => {
       <Input placeholder="请输入标签名称" value={name} onChange={setName} />
     </Modal>
   );
-}
+};
 
 export default TagModal
