@@ -2,10 +2,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, net, protocol } from 'electron'
-import logger from './logger'
-import { LogIpcManager } from './logger/ipc'
-import { LogUtils } from './logger/utils'
+import { app, BrowserWindow, Menu, nativeImage, net, protocol, Tray } from 'electron'
+import initIpcMain from './ipcMain';
+import logger from './logger';
+import { LogIpcManager } from './logger/ipc';
+import { LogUtils } from './logger/utils';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -48,7 +49,9 @@ console.log('[DEBUG] isDev:', isDev)
 export const WEB_URL = import.meta.env.VITE_WEB_URL
 
 /** 主窗口实例 */
-let win: BrowserWindow | null
+export let win: BrowserWindow | null
+/** 托盘图标实例 */
+let tray: Tray | null = null
 
 // 安全性设置，允许加载本地资源 - 必须在app ready之前调用
 protocol.registerSchemesAsPrivileged([
@@ -75,6 +78,71 @@ function initApp() {
 }
 
 /**
+ * 创建系统托盘图标
+ */
+function createTray() {
+  logger.info('Tray', '正在创建系统托盘图标')
+
+  // 加载托盘图标
+  const iconPath = path.join(PUBLIC, 'electron-vite.svg')
+  const icon = nativeImage.createFromPath(iconPath)
+
+  tray = new Tray(icon)
+  tray.setToolTip('我的应用')
+
+  // 创建托盘菜单
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '置顶窗口',
+      type: 'checkbox',
+      checked: false,
+      click: (menuItem) => {
+        if (!win)
+          return;
+
+        win.setAlwaysOnTop(menuItem.checked)
+        logger.info('Tray', `窗口置顶状态: ${menuItem.checked}`)
+      },
+    },
+    { type: 'separator' },
+    {
+      label: '显示窗口',
+      click: () => {
+        if (win) {
+          win.show()
+          win.focus()
+        }
+      },
+    },
+    { type: 'separator' },
+    {
+      label: '退出',
+      click: () => {
+        app.quit()
+      },
+    },
+  ]);
+
+  // 设置托盘菜单
+  tray.setContextMenu(contextMenu)
+
+  // 点击托盘图标时显示窗口
+  tray.on('click', () => {
+    if (win) {
+      if (win.isVisible()) {
+        win.hide()
+      }
+      else {
+        win.show()
+        win.focus()
+      }
+    }
+  })
+
+  logger.info('Tray', '系统托盘图标创建完成')
+}
+
+/**
  * 创建主窗口
  */
 function createWindow() {
@@ -91,13 +159,27 @@ function createWindow() {
       contextIsolation: true,
       allowRunningInsecureContent: true, // 允许执行不安全内容
     },
+    // 隐藏菜单栏但保留窗口控制按钮
+    autoHideMenuBar: true,
+    frame: true, // 保留窗口框架，这样会显示最大化/最小化按钮
+    // 窗口大小
+    width: 800,
+    height: 600,
   })
+
+  // 移除应用菜单
+  Menu.setApplicationMenu(null)
+
+  // 创建系统托盘
+  createTray()
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date()).toLocaleString())
     logger.debug('Window', '主窗口加载完成')
-  })
+  });
+
+  initIpcMain(win)
 
   // 加载本地静态文件
   // const indexPath = path.join(RENDERER_DIST, 'index.html')
@@ -108,7 +190,7 @@ function createWindow() {
       logger.debug('Window', `加载开发环境URL: ${WEB_URL}`)
       win?.loadURL(WEB_URL)
       win.webContents.openDevTools()
-      return
+      return;
     }
     // 使用自定义app://协议加载HTML文件，解决资源路径问题
     const appUrl = `app://./index.html`
@@ -193,9 +275,14 @@ app.whenReady().then(() => {
   initApp() // 初始化应用
   setupProtocol()
   createWindow()
-})
+});
 
 // 应用退出前记录日志
 app.on('before-quit', () => {
   logger.info('App', '应用即将退出')
+  // 销毁托盘图标
+  if (tray) {
+    tray.destroy()
+    tray = null
+  }
 })

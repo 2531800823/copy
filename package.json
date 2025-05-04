@@ -10,11 +10,13 @@
   "scripts": {
     "lint": "eslint",
     "lint:fix": "eslint --fix",
+    "web": "pnpm --filter web",
+    "desktop": "pnpm --filter desktop",
     "dev:web": "pnpm --filter web dev",
-    "dev:desktop": "pnpm -F  desktop dev",
+    "dev:desktop": "pnpm --filter desktop dev",
     "start": "npm-run-all --parallel dev:web dev:desktop",
     "build:web": "pnpm --filter web build",
-    "build:desktop": "pnpm -F  desktop build",
+    "build:desktop": "pnpm --filter desktop build",
     "build": "pnpm build:web && pnpm build:desktop"
   },
   "devDependencies": {

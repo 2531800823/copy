@@ -1,0 +1,85 @@
+{
+  "cards": [
+    {
+      "id": "1",
+      "content": "您好，欢迎使用",
+      "tags": ["tag1", "tag4"],
+      "categoryId": "common"
+    },
+    {
+      "id": "2",
+      "content": "您好，欢迎使用我们的客户服务，请问有什么可以帮到您?",
+      "tags": ["tag1", "tag4"],
+      "categoryId": "customer-service"
+    },
+    {
+      "id": "3",
+      "content": "您好，欢迎光临***店！现在由我为您服务，请问有什么可以为您服务的吗?",
+      "tags": ["tag1"],
+      "categoryId": "customer-service"
+    },
+    {
+      "id": "4",
+      "content": "如有任何疑问或需要进一步帮助，请随时与我们联系。我们将全天候为您服务，以确保您的满意度。",
+      "tags": ["tag2", "tag1"],
+      "categoryId": "after-sales"
+    },
+    {
+      "id": "5",
+      "content": "感谢您对我们的支持。如果您需要任何帮助，请随时联系我们，我们将竭诚为您服务。",
+      "tags": ["tag2", "tag1"],
+      "order": 1,
+      "categoryId": "after-sales"
+    },
+    {
+      "id": "6",
+      "content": "您好，感谢您。您好，感谢您选择我们的服务，请问有什么可以帮到您?",
+      "tags": ["tag2", "tag1"],
+      "order": 2,
+      "categoryId": "customer-service"
+    },
+    {
+      "id": "7",
+      "content": "感谢您对我们的支持。如有任何问题，请随时与我们联系。",
+      "tags": ["tag2", "tag3"],
+      "order": 2,
+      "categoryId": "after-sales"
+    },
+    {
+      "id": "8",
+      "content": "感谢您的信任。感谢您的信任和支持，我们将一如既往地为您提供最优质的服务。如有任何疑问，请随时联系我们。",
+      "tags": ["tag2", "tag3"],
+      "order": 3,
+      "categoryId": "after-sales"
+    },
+    {
+      "id": "9",
+      "content": "感谢您选择。感谢您选择我们的服务，我们将尽全力为您提供最优质的支持。如果您有任何问题或需求，请随时告知我们，我们将很乐意协助您。",
+      "tags": ["tag2", "tag3"],
+      "order": 4,
+      "categoryId": "after-sales"
+    }
+  ],
+  "tags": [
+    {
+      "id": "tag1",
+      "name": "客服",
+      "color": "#4285f4"
+    },
+    {
+      "id": "tag2",
+      "name": "售后",
+      "color": "#34a853"
+    },
+    {
+      "id": "tag3",
+      "name": "投诉",
+      "color": "#ea4335"
+    },
+    {
+      "id": "tag4",
+      "name": "问候",
+      "color": "#fbbc05"
+    }
+  ]
+}

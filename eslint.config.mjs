@@ -6,5 +6,7 @@ export default antfu({
   ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/dist-electron/**'],
   rules: {
     'no-console': 'off',
+    'member-delimiter-style': 'off',
+    'semi': ['error', 'always'],
   },
 })

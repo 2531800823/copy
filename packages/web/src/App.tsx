@@ -1,9 +1,12 @@
-function App() {
-  return (
-    <>
-      123
-    </>
-  )
-}
+import React from 'react';
+import HomePage from './pages/HomePage';
+import './styles/global.less';
 
-export default App
+/**
+ * 应用根组件
+ */
+const App: React.FC = () => {
+  return <HomePage />;
+};
+
+export default App;
