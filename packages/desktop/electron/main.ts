@@ -3,11 +3,9 @@ import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow, net, protocol } from 'electron'
-import electronLog from 'electron-log'
-
-// 配置日志
-electronLog.transports.console.level = 'debug'
-electronLog.transports.file.level = 'info'
+import logger from './logger'
+import { LogIpcManager } from './logger/ipc'
+import { LogUtils } from './logger/utils'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -31,7 +29,7 @@ export const PUBLIC = path.join(DIST_ELECTRON, '../public')
 export const RENDERER_DIST = path.join(__dirname, '../../web/dist')
 // 如果您的dist在其他位置，请相应修改路径，例如：
 // export const RENDERER_DIST = path.join(__dirname, '../dist') // 如果在desktop/dist目录下
-electronLog.info('加载渲染进程路径:', RENDERER_DIST)
+console.log('🚀 加载渲染进程路径:', RENDERER_DIST)
 
 export const isMac = process.platform === 'darwin'
 export const isLinux = process.platform === 'linux'
@@ -41,7 +39,7 @@ export const isWin = process.platform === 'win32'
  * 判断是否为开发环境
  */
 export const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
-electronLog.info('开发环境状态:', isDev)
+console.log('[DEBUG] isDev:', isDev)
 
 /**
  * 获取环境变量中的 WEB_URL
@@ -58,9 +56,30 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 /**
+ * 应用初始化
+ */
+function initApp() {
+  // 初始化日志系统
+  logger.init()
+
+  // 设置未捕获异常处理
+  LogUtils.setupUncaughtExceptionHandler()
+
+  // 设置IPC日志处理
+  LogIpcManager.setup()
+
+  // 记录应用启动信息
+  LogUtils.logAppStartup()
+
+  logger.info('App', '应用初始化完成')
+}
+
+/**
  * 创建主窗口
  */
 function createWindow() {
+  logger.info('Window', '正在创建主窗口')
+
   win = new BrowserWindow({
     icon: path.join(PUBLIC, 'electron-vite.svg'),
     webPreferences: {
@@ -77,6 +96,7 @@ function createWindow() {
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date()).toLocaleString())
+    logger.debug('Window', '主窗口加载完成')
   })
 
   // 加载本地静态文件
@@ -85,19 +105,22 @@ function createWindow() {
   // 检查文件是否存在
   try {
     if (isDev) {
+      logger.debug('Window', `加载开发环境URL: ${WEB_URL}`)
       win?.loadURL(WEB_URL)
       win.webContents.openDevTools()
       return
     }
     // 使用自定义app://协议加载HTML文件，解决资源路径问题
     const appUrl = `app://./index.html`
-    electronLog.info('加载本地静态文件:', appUrl)
+    logger.debug('Window', `加载生产环境URL: ${appUrl}`)
+    console.log('🚀 加载本地静态文件:', appUrl)
     win?.loadURL(appUrl)
 
     // 开发环境下打开开发者工具
   }
   catch (error) {
-    electronLog.error('加载渲染进程失败:', error)
+    logger.error('Window', '加载渲染进程失败', error)
+    console.error('加载渲染进程失败:', error)
   }
 }
 
@@ -108,6 +131,9 @@ function setupProtocol() {
   if (isDev) {
     return
   }
+
+  logger.debug('Protocol', '设置app://协议处理器')
+
   // 注册app协议
   protocol.handle('app', (request) => {
     const url = request.url.slice('app://'.length)
@@ -124,31 +150,39 @@ function setupProtocol() {
         filePath = path.join(RENDERER_DIST, decodedUrl)
       }
 
-      electronLog.debug('请求资源:', request.url, '->>', filePath)
+      logger.debug('Protocol', `请求资源: ${request.url} -> ${filePath}`)
+      console.log('请求资源:', request.url, '->>', filePath)
 
       // 检查文件是否存在
       if (fs.existsSync(filePath)) {
         return net.fetch(`file://${filePath}`)
       }
 
-      electronLog.warn(`文件不存在: ${filePath}`)
+      logger.warn('Protocol', `文件不存在: ${filePath}`)
+      console.warn(`文件不存在: ${filePath}`)
       return new Response(null, { status: 404 })
     }
     catch (error) {
-      electronLog.error('加载资源失败:', error)
+      logger.error('Protocol', '加载资源失败', error)
+      console.error('加载资源失败:', error)
       return new Response(null, { status: 500 })
     }
   })
 }
 
 app.on('window-all-closed', () => {
+  logger.info('App', '所有窗口已关闭')
+
   if (process.platform !== 'darwin') {
+    logger.info('App', '应用即将退出')
     app.quit()
     win = null
   }
 })
 
 app.on('activate', () => {
+  logger.info('App', '应用被激活')
+
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
@@ -156,6 +190,12 @@ app.on('activate', () => {
 
 // 应用准备好后设置协议并创建窗口
 app.whenReady().then(() => {
+  initApp() // 初始化应用
   setupProtocol()
   createWindow()
+})
+
+// 应用退出前记录日志
+app.on('before-quit', () => {
+  logger.info('App', '应用即将退出')
 })
