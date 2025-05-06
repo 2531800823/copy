@@ -20,7 +20,7 @@ interface CardState {
   deleteTag: (id: string) => void
 
   setActiveTag: (id: string) => void
-  
+
   // 导入数据操作
   importData: (data: { cards: Card[], tags: Tag[] }) => void
 }
@@ -34,6 +34,7 @@ const useCardStore = create<CardState>()(
       cards: [{
         id: '1',
         content: '您好，欢迎使用',
+        title: '标题',
         tags: ['1'],
         categoryId: 'text',
       }],
@@ -77,7 +78,7 @@ const useCardStore = create<CardState>()(
 
       // 标签操作
       addTag: tag => set(state => ({
-        tags: [...state.tags, { ...tag}],
+        tags: [...state.tags, { ...tag }],
       })),
 
       updateTag: (id, updatedTag) => set(state => ({
@@ -100,31 +101,31 @@ const useCardStore = create<CardState>()(
       }),
 
       setActiveTag: id => set({ activeTag: id }),
-      
+
       /**
        * 导入数据，完全覆盖现有数据
        * @param data 要导入的数据，包含cards和tags
        */
-      importData: (data) => set(() => {
+      importData: data => set(() => {
         // 为了保持数据的完整性，我们需要确保导入的数据符合我们的结构要求
         const importedCards = Array.isArray(data.cards) ? data.cards : [];
         const importedTags = Array.isArray(data.tags) ? data.tags : [];
-        
+
         // 如果导入的数据为空，保留默认数据
         if (importedCards.length === 0 && importedTags.length === 0) {
           return {};
         }
-        
+
         // 如果标签为空但卡片不为空，添加一个默认标签
         const tags = importedTags.length > 0 ? importedTags : [{ id: '1', name: '默认', color: '#4285f4' }];
-        
+
         // 如果卡片中引用了不存在的标签，清除这些引用
         const tagIds = new Set(tags.map(tag => tag.id));
         const cards = importedCards.map(card => ({
           ...card,
-          tags: Array.isArray(card.tags) ? card.tags.filter(tagId => tagIds.has(tagId)) : []
+          tags: Array.isArray(card.tags) ? card.tags.filter(tagId => tagIds.has(tagId)) : [],
         }));
-        
+
         return { cards, tags };
       }),
     }),

@@ -15,6 +15,8 @@ import { useDragSensors } from '../../utils/dndUtils'
 import Card from '../Card/Card'
 import styles from './CardList.module.less';
 
+const defaultTag = 'all';
+
 /**
  * 卡片列表组件
  */
@@ -35,9 +37,11 @@ const CardList: React.FC = () => {
 
   // 过滤出当前标签的卡片
   const currentCards = useMemo(() => {
+    if (activeTag === defaultTag) {
+      return cards;
+    }
     return cards.filter(card => card.tags.includes(activeTag));
   }, [cards, activeTag]);
-  console.log('🚀 liu123 ~ currentCards:', currentCards)
 
   return (
     <div className={styles.cardList}>
@@ -62,6 +66,6 @@ const CardList: React.FC = () => {
       </DndContext>
     </div>
   );
-}
+};
 
 export default CardList;

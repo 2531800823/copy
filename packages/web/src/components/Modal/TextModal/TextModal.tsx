@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Modal, TextArea } from '@douyinfe/semi-ui'
+import { Input, Modal, TextArea } from '@douyinfe/semi-ui'
 import classnames from 'classnames';
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
@@ -17,17 +17,21 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
   const { tags, addCard } = useCardStore();
   const [activeTag, setActiveTag] = useState<string[]>([tags[0].id]);
   const [content, setContent] = useState('');
-
+  const [title, setTitle] = useState('');
   const handleOk = () => {
     addCard({
       id: uuidv4(),
       content,
+      title,
       tags: activeTag,
       categoryId: 'text',
     })
+    setTitle('');
+    setContent('');
+    setActiveTag([tags[0].id]);
     onOk();
 
-  };
+  }
 
   const handleTagClick = (id: string) => {
     if (activeTag.includes(id)) {
@@ -47,8 +51,8 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
       onCancel={onCancel}
       closeOnEsc={true}
     >
-
-      <TextArea placeholder="请输入文本" autosize value={content} onChange={setContent} />
+      <Input placeholder="请输入标题" value={title} onChange={setTitle} />
+      <TextArea placeholder="请输入文本" style={{ marginTop: 12 }} autosize value={content} onChange={setContent} />
       <div className={styles.tags}>
         {tags.map((item) => {
           const isSelected = activeTag.includes(item.id);
@@ -71,6 +75,6 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
       </div>
     </Modal>
   );
-}
+};
 
 export default TextModalModal

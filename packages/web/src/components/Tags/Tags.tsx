@@ -3,7 +3,7 @@ import classnames from 'classnames'
 import useCardStore from '../../store/useCardStore'
 import styles from './Tags.module.less'
 
-interface TagsProps {}
+interface TagsProps { }
 
 /**
  * 标签组件，支持多彩样式和选中状态
@@ -13,10 +13,23 @@ const Tags: FC<TagsProps> = () => {
 
   const handleTagClick = (id: string) => {
     setActiveTag(id);
-  };
+  }
+
+  const isDefault = activeTag === 'all';
 
   return (
     <div className={styles.tags}>
+      <div
+        className={classnames(styles.tag, isDefault && styles.selected)}
+        onClick={() => handleTagClick('all')}
+        style={{
+          backgroundColor: isDefault ? '#1677ff' : '#ffffff',
+          color: isDefault ? '#ffffff' : '#1677ff',
+          borderColor: '#1677ff',
+        }}
+      >
+        全部
+      </div>
       {tags.map((item) => {
         const isSelected = activeTag === item.id;
 
@@ -37,6 +50,6 @@ const Tags: FC<TagsProps> = () => {
       })}
     </div>
   );
-};
+}
 
 export default Tags;

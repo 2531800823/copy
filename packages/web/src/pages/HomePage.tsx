@@ -29,7 +29,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 500);
-    };
+    }
 
     // 初始化检查
     checkScreenSize();
@@ -150,7 +150,7 @@ const HomePage: React.FC = () => {
         </Tooltip>
       </>
     );
-  };
+  }
 
   return (
     <div className={styles.homePage}>
@@ -211,6 +211,6 @@ const HomePage: React.FC = () => {
       />
     </div>
   );
-};
+}
 
 export default HomePage;

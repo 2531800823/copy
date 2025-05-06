@@ -12,6 +12,7 @@ export interface Tag {
  */
 export interface Card {
   id: string
+  title: string
   content: string
   tags: string[] // 标签ID列表
   /** 暂存 */

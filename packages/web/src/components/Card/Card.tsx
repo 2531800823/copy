@@ -71,7 +71,8 @@ const Card: React.FC<CardProps> = ({
         className={styles.content}
         onMouseDown={e => e.stopPropagation()} // 防止触发拖拽
       >
-        {card.content}
+        <div className={styles.title}>{card.title}</div>
+        <div className={styles.content}>{card.content}</div>
         {isCopied && <div className={styles.copiedToast}>已复制</div>}
       </div>
 
@@ -107,6 +108,6 @@ const Card: React.FC<CardProps> = ({
       </div>
     </div>
   );
-}
+};
 
 export default Card;
