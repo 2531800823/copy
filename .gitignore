@@ -4,6 +4,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+node_modules
+$node_modules/
 
 dist
 .DS_Store
@@ -12,7 +14,7 @@ dist
 */out
 */dist
 */build
-*/node_modules
+**/node_modules/**
 */pnpm-lock.yaml
 */yarn.lock
 */lerna.lock

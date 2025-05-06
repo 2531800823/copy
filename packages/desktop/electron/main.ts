@@ -49,6 +49,7 @@ console.log('[DEBUG] isDev:', isDev)
 export const WEB_URL = import.meta.env.VITE_WEB_URL
 
 /** 主窗口实例 */
+// eslint-disable-next-line import/no-mutable-exports
 export let win: BrowserWindow | null
 /** 托盘图标实例 */
 let tray: Tray | null = null
@@ -190,7 +191,7 @@ function createWindow() {
       logger.info('Window', `url: ${WEB_URL}`)
       win?.loadURL(WEB_URL)
       win.webContents.openDevTools()
-      return;
+      return
     }
     // 使用自定义app://协议加载HTML文件，解决资源路径问题
     const appUrl = `app://./index.html`
