@@ -137,8 +137,8 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
 
           // 添加卡片，不指定ID（会自动生成）
           addCard({
+            ...card,
             id: newId,
-            content: card.content,
             tags: mappedTags,
             categoryId: card.categoryId || 'text',
           });
