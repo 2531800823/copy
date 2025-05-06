@@ -13,21 +13,21 @@
 
 ### Windows 用户
 
-1. 前往 [Releases](https://github.com/yourusername/copy/releases) 页面
+1. 前往 [Releases](https://github.com/2531800823/copy/releases) 页面
 2. 下载最新的 `CopyApp-Windows-x.x.x-Setup.exe` 安装文件
 3. 运行安装程序，按照提示完成安装
 4. 从开始菜单或桌面快捷方式启动应用
 
 ### macOS 用户
 
-1. 前往 [Releases](https://github.com/yourusername/copy/releases) 页面
+1. 前往 [Releases](https://github.com/2531800823/copy/releases) 页面
 2. 下载最新的 `CopyApp-Mac-x.x.x-Installer.dmg` 安装文件
 3. 打开 DMG 文件，将应用拖到 Applications 文件夹
 4. 从应用程序列表中启动 CopyApp
 
 ### Linux 用户
 
-1. 前往 [Releases](https://github.com/yourusername/copy/releases) 页面
+1. 前往 [Releases](https://github.com/2531800823/copy/releases) 页面
 2. 下载最新的 `CopyApp-Linux-x.x.x.AppImage` 文件
 3. 添加执行权限：`chmod +x CopyApp-Linux-x.x.x.AppImage`
 4. 运行应用：`./CopyApp-Linux-x.x.x.AppImage`
@@ -77,6 +77,3 @@ pnpm build:desktop
 ## 贡献指南
 
 欢迎提交问题和贡献代码，请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解更多信息。
-
-
-

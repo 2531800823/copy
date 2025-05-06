@@ -8,7 +8,7 @@
 
 如果您发现了 Bug，请通过 GitHub Issues 报告，并尽可能详细地描述问题及复现步骤。
 
-1. 检查 [Issues](https://github.com/yourusername/copy/issues) 列表，确保问题尚未被报告
+1. 检查 [Issues](https://github.com/2531800823/copy/issues) 列表，确保问题尚未被报告
 2. 使用 Bug 报告模板创建新的 Issue
 3. 提供详细的复现步骤、期望行为和实际行为
 4. 如果可能，附上错误截图或日志
@@ -37,7 +37,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/copy.git
+git clone https://github.com/2531800823/copy.git
 cd copy
 
 # 安装依赖
@@ -69,4 +69,4 @@ pnpm start
 - 次版本号：向后兼容的功能新增
 - 修订版本号：向后兼容的问题修正
 
-感谢您的贡献！ 
+感谢您的贡献！
