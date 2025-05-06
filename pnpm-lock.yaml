@@ -33,7 +33,7 @@ importers:
   packages/desktop:
     dependencies:
       electron-updater:
-        specifier: ^6.6.2
+        specifier: ^6.1.7
         version: 6.6.2
       log4js:
         specifier: ^6.9.1
