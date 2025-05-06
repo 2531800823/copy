@@ -2,7 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, Menu, nativeImage, net, protocol, Tray } from 'electron'
+import { app, BrowserWindow, dialog, Menu, nativeImage, net, protocol, Tray } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import initIpcMain from './ipcMain';
 import logger from './logger';
 import { LogIpcManager } from './logger/ipc';
@@ -74,6 +75,9 @@ function initApp() {
 
   // 记录应用启动信息
   LogUtils.logAppStartup()
+
+  // 配置自动更新
+  setupAutoUpdater()
 
   logger.info('App', '应用初始化完成')
 }
@@ -191,7 +195,7 @@ function createWindow() {
       logger.info('Window', `url: ${WEB_URL}`)
       win?.loadURL(WEB_URL)
       win.webContents.openDevTools()
-      return
+      return;
     }
     // 使用自定义app://协议加载HTML文件，解决资源路径问题
     const appUrl = `app://./index.html`
@@ -251,6 +255,90 @@ function setupProtocol() {
       return new Response(null, { status: 500 })
     }
   })
+}
+
+/**
+ * 配置自动更新
+ */
+function setupAutoUpdater() {
+  if (isDev) {
+    logger.info('Updater', '开发环境下不启用自动更新')
+    return;
+  }
+
+  logger.info('Updater', '初始化自动更新模块')
+
+  // 配置日志
+  autoUpdater.logger = logger.getLogger()
+
+  // 配置自动下载
+  autoUpdater.autoDownload = true
+
+  // 配置允许降级（可选，默认为false）
+  autoUpdater.allowDowngrade = false
+
+  // 错误处理
+  autoUpdater.on('error', (error) => {
+    logger.error('Updater', '更新错误', error)
+    dialog.showErrorBox('更新出错', `检查更新时出现错误: ${error.message}`)
+  });
+
+  // 检查更新中
+  autoUpdater.on('checking-for-update', () => {
+    logger.info('Updater', '正在检查更新...')
+  });
+
+  // 有可用更新
+  autoUpdater.on('update-available', (info) => {
+    logger.info('Updater', '发现新版本', info)
+    dialog.showMessageBox({
+      type: 'info',
+      title: '发现新版本',
+      message: `发现新版本: ${info.version}`,
+      detail: '正在自动下载更新，下载完成后将提示您安装',
+      buttons: ['确定'],
+    })
+  });
+
+  // 没有可用更新
+  autoUpdater.on('update-not-available', (info) => {
+    logger.info('Updater', '当前已是最新版本', info)
+  });
+
+  // 更新下载进度
+  autoUpdater.on('download-progress', (progressObj) => {
+    const logMessage = `下载速度: ${progressObj.bytesPerSecond} - 已下载 ${Math.round(progressObj.percent)}% (${progressObj.transferred}/${progressObj.total})`
+    logger.info('Updater', logMessage)
+    if (win) {
+      win.webContents.send('update-progress', progressObj)
+    }
+  })
+
+  // 更新下载完成
+  autoUpdater.on('update-downloaded', (info) => {
+    logger.info('Updater', '更新已下载，准备安装', info)
+
+    dialog.showMessageBox({
+      type: 'info',
+      title: '安装更新',
+      message: '更新已下载',
+      detail: '新版本已下载完成，应用将重启并安装',
+      buttons: ['立即安装', '稍后安装'],
+    }).then((returnValue) => {
+      if (returnValue.response === 0) {
+        // 关闭应用并安装更新
+        autoUpdater.quitAndInstall(false, true)
+      }
+    })
+  });
+
+  // 延迟5秒后检查更新，避免应用启动时的性能影响
+  setTimeout(() => {
+    logger.info('Updater', '开始检查更新')
+    autoUpdater.checkForUpdates().catch((err) => {
+      logger.error('Updater', '检查更新失败', err)
+    });
+  }, 5000)
 }
 
 app.on('window-all-closed', () => {

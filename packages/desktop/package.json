@@ -18,9 +18,13 @@
     "build:mac": "tsc && vite build && electron-builder --mac",
     "build:linux": "tsc && vite build && electron-builder --linux",
     "publish": "tsc && vite build && electron-builder --publish always",
+    "publish:win": "tsc && vite build && electron-builder --win --publish always",
+    "publish:mac": "tsc && vite build && electron-builder --mac --publish always",
+    "publish:linux": "tsc && vite build && electron-builder --linux --publish always",
     "preview": "vite preview"
   },
   "dependencies": {
+    "electron-updater": "^6.1.7",
     "log4js": "^6.9.1"
   },
   "devDependencies": {

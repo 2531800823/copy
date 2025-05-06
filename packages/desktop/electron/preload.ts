@@ -1,6 +1,6 @@
-import type { LogIpcChannel } from './logger/ipc'
-import { contextBridge, ipcRenderer } from 'electron'
-import { IpcChannel } from './ipcMain'
+import type { LogIpcChannel } from './logger/ipc';
+import { contextBridge, ipcRenderer } from 'electron';
+import { IpcChannel } from './ipcMain';
 
 // 日志接口类型
 interface LogAPI {
@@ -14,29 +14,41 @@ interface LogAPI {
   cleanupLogs: (days?: number) => Promise<any>
 }
 
+// 更新接口类型
+interface UpdaterAPI {
+  checkForUpdates: () => Promise<void>
+  downloadUpdate: () => Promise<void>
+  quitAndInstall: () => Promise<void>
+  onUpdateAvailable: (callback: (info: any) => void) => void
+  onUpdateNotAvailable: (callback: (info: any) => void) => void
+  onUpdateProgress: (callback: (progress: any) => void) => void
+  onUpdateDownloaded: (callback: (info: any) => void) => void
+  onUpdateError: (callback: (error: any) => void) => void
+}
+
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
   on(...args: Parameters<typeof ipcRenderer.on>) {
-    const [channel, listener] = args;
-    return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args));
+    const [channel, listener] = args
+    return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
   },
   off(...args: Parameters<typeof ipcRenderer.off>) {
-    const [channel, ...omit] = args;
-    return ipcRenderer.off(channel, ...omit);
+    const [channel, ...omit] = args
+    return ipcRenderer.off(channel, ...omit)
   },
   send(...args: Parameters<typeof ipcRenderer.send>) {
-    const [channel, ...omit] = args;
-    return ipcRenderer.send(channel, ...omit);
+    const [channel, ...omit] = args
+    return ipcRenderer.send(channel, ...omit)
   },
   invoke(...args: Parameters<typeof ipcRenderer.invoke>) {
-    const [channel, ...omit] = args;
-    return ipcRenderer.invoke(channel, ...omit);
+    const [channel, ...omit] = args
+    return ipcRenderer.invoke(channel, ...omit)
   },
 
   // You can expose other APTs you need here.
   // ...
   toggleWindowTop: (message: boolean) => ipcRenderer.invoke(IpcChannel.TOGGLE_WINDOW_TOP, message),
-});
+})
 
 // 暴露日志API
 contextBridge.exposeInMainWorld('logger', {
@@ -63,4 +75,37 @@ contextBridge.exposeInMainWorld('logger', {
   getLogFiles: () => ipcRenderer.invoke('log:get-files'),
 
   cleanupLogs: (days = 30) => ipcRenderer.invoke('log:clean', { days }),
-} as LogAPI);
+} as LogAPI)
+
+// 暴露更新API
+contextBridge.exposeInMainWorld('updater', {
+  // 主动检查更新
+  checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+
+  // 下载更新
+  downloadUpdate: () => ipcRenderer.invoke('updater:download'),
+
+  // 退出并安装更新
+  quitAndInstall: () => ipcRenderer.invoke('updater:install'),
+
+  // 更新事件监听
+  onUpdateAvailable: (callback: (info: any) => void) => {
+    ipcRenderer.on('update-available', (_event, info) => callback(info));
+  },
+
+  onUpdateNotAvailable: (callback: (info: any) => void) => {
+    ipcRenderer.on('update-not-available', (_event, info) => callback(info));
+  },
+
+  onUpdateProgress: (callback: (progress: any) => void) => {
+    ipcRenderer.on('update-progress', (_event, progress) => callback(progress));
+  },
+
+  onUpdateDownloaded: (callback: (info: any) => void) => {
+    ipcRenderer.on('update-downloaded', (_event, info) => callback(info));
+  },
+
+  onUpdateError: (callback: (error: any) => void) => {
+    ipcRenderer.on('update-error', (_event, error) => callback(error));
+  },
+} as UpdaterAPI)
