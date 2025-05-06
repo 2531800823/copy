@@ -187,7 +187,7 @@ function createWindow() {
   // 检查文件是否存在
   try {
     if (isDev) {
-      logger.debug('Window', `加载开发环境URL: ${WEB_URL}`)
+      logger.info('Window', `url: ${WEB_URL}`)
       win?.loadURL(WEB_URL)
       win.webContents.openDevTools()
       return;

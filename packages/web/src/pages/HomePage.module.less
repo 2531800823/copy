@@ -24,6 +24,8 @@ header{
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
+    max-width: 70%;
 
     .tag{
       padding: 4px 8px;
@@ -31,6 +33,17 @@ header{
       border-radius: 16px;
       font-size: 14px;
       color: #424242;
+    }
+  }
+}
+
+@media screen and (max-width: 500px) {
+  header {
+    .tags {
+      max-width: calc(100% - 50px);
+    }
+    .buttonGroup {
+      min-width: 40px;
     }
   }
 }
