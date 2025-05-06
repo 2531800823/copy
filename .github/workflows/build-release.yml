@@ -1,0 +1,134 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号 (例如: v1.0.0)'
+        required: true
+        default: v0.0.1
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        # 如果需要构建macOS和Linux版本，可以取消下面注释
+        # os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 设置 PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.10.0
+
+      - name: 获取 PNPM 存储目录
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: 设置缓存
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 安装依赖
+        run: pnpm install
+
+      - name: 构建Web应用
+        run: pnpm build:web
+
+      - name: 构建桌面应用
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd packages/desktop
+          # 设置版本号
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            NEW_VERSION="${{ github.event.inputs.version }}"
+            # 移除前缀 'v'
+            NEW_VERSION="${NEW_VERSION#v}"
+          else
+            # 从 tag 中获取版本号
+            NEW_VERSION="${{ github.ref_name }}"
+            # 移除前缀 'v'
+            NEW_VERSION="${NEW_VERSION#v}"
+          fi
+          # 更新 package.json 中的版本号
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" package.json
+          else
+            sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" package.json
+          fi
+
+          # 构建应用
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            pnpm build:win
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            pnpm build:mac
+          else
+            pnpm build:linux
+          fi
+        shell: bash
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ runner.os }}
+          path: |
+            packages/desktop/release/*/CopyApp-*.*
+            !packages/desktop/release/*/win-unpacked
+            !packages/desktop/release/*/mac
+            !packages/desktop/release/*/linux-unpacked
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 创建发布
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version || github.ref }}
+          name: CopyApp ${{ github.event.inputs.version || github.ref_name }}
+          draft: false
+          prerelease: false
+          files: artifacts/**/*
+          body: |
+            # CopyApp 发布版本 ${{ github.event.inputs.version || github.ref_name }}
+
+            ## 下载说明
+
+            ### Windows 用户
+            下载 `CopyApp-Windows-*.exe` 安装文件
+
+            ### macOS 用户
+            下载 `CopyApp-Mac-*.dmg` 安装文件
+
+            ### Linux 用户
+            下载 `CopyApp-Linux-*.AppImage` 文件

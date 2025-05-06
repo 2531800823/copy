@@ -1,74 +1,82 @@
-# 常用语
-该软件是一个用于管理和快速调用“常用语”的工具，适用于客服、销售、售后等场景，主要用于提升沟通效率。
+# CopyApp
 
-主要功能模块及需求梳理
-1. 卡片系统（核心）
-每条“常用语”作为一张卡片进行管理，具备以下功能：
+一个基于Electron的现代桌面应用程序，提供便捷的复制粘贴功能。
 
-✅ 卡片基本功能
-添加新卡片（输入内容文本）
+## 功能特点
 
-删除卡片
+- 跨平台支持：Windows, macOS, Linux
+- 便捷的复制粘贴管理
+- 现代化的用户界面
+- 支持快捷键操作
 
-编辑卡片内容
+## 下载安装
 
-📋 卡片排序与拖拽
-卡片支持通过拖拽的方式排序
+### Windows 用户
 
-拖拽时显示位置变化的视觉反馈
+1. 前往 [Releases](https://github.com/yourusername/copy/releases) 页面
+2. 下载最新的 `CopyApp-Windows-x.x.x-Setup.exe` 安装文件
+3. 运行安装程序，按照提示完成安装
+4. 从开始菜单或桌面快捷方式启动应用
 
-🔖 卡片标签管理
-每张卡片可以分配一个或多个标签
+### macOS 用户
 
-标签可拖拽进行重新分组、分类
+1. 前往 [Releases](https://github.com/yourusername/copy/releases) 页面
+2. 下载最新的 `CopyApp-Mac-x.x.x-Installer.dmg` 安装文件
+3. 打开 DMG 文件，将应用拖到 Applications 文件夹
+4. 从应用程序列表中启动 CopyApp
 
-支持基于标签过滤显示卡片（可多选标签）
+### Linux 用户
 
-📋 文本复制功能
-每张卡片支持点击快速复制内容到剪贴板
+1. 前往 [Releases](https://github.com/yourusername/copy/releases) 页面
+2. 下载最新的 `CopyApp-Linux-x.x.x.AppImage` 文件
+3. 添加执行权限：`chmod +x CopyApp-Linux-x.x.x.AppImage`
+4. 运行应用：`./CopyApp-Linux-x.x.x.AppImage`
 
-可选：复制后显示“已复制”提示
+## 开发指南
 
-2. 搜索功能
-全局搜索：支持在当前分类/标签下快速搜索卡片内容
+本项目使用 pnpm 作为包管理器，采用 monorepo 结构组织代码。
 
-搜索输入后实时匹配显示结果（支持模糊搜索）
+### 项目结构
 
-高亮显示匹配关键字（可选）
+```
+/packages
+  /desktop - Electron 桌面应用
+  /web     - Web 前端界面
+  /server  - 后端服务（如果有）
+```
 
-3. 分类/标签模块
-从截图顶部来看，存在多个分类页签（如“常用”“客服”“售后”“常用命令”“常用代码”）：
+### 本地开发
 
-分类页签支持切换，展示对应类别下的卡片
+```bash
+# 安装依赖
+pnpm install
 
-每个分类下的卡片独立管理
+# 启动所有服务
+pnpm start
 
-可配置分类数量与名称（如“客服”“售后”等）
+# 或者单独启动某个服务
+pnpm dev:web     # 启动前端服务
+pnpm dev:desktop # 启动桌面应用
+pnpm dev:server  # 启动后端服务（如果有）
+```
 
-4. 用户操作功能（工具栏）
-截图右上角有多个工具图标：
+### 构建应用
 
-🔍 搜索框
+```bash
+# 构建所有服务
+pnpm build
 
-➕ 添加按钮：添加新卡片
+# 或者单独构建桌面应用
+pnpm build:desktop
+```
 
-✏️ 编辑功能（可能包括卡片或分类的编辑）
+## 许可证
 
-⚙️ 设置：如快捷键、自定义颜色、自动粘贴等
+[MIT](LICENSE)
 
-📐 UI/UX 设计建议
-支持卡片拖拽排序时的动画过渡
+## 贡献指南
 
-标签拖拽应具备吸附效果和目标区提示
-
-搜索结果列表应突出匹配项（如加粗或高亮）
-
-支持夜间/浅色主题切换（可选）
-
-技术选型
-状态管理 使用 zustand
-ui 使用 less css modules
-拖拽排序 @dnd-kit/core
+欢迎提交问题和贡献代码，请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解更多信息。
 
 
 

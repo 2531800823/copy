@@ -5,10 +5,19 @@
   "private": true,
   "description": "Electron desktop application",
   "author": "2531800823@qq.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/2531800823/copy.git"
+  },
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder -- --dir",
+    "build": "tsc && vite build && electron-builder",
+    "build:dir": "tsc && vite build && electron-builder --dir",
+    "build:win": "tsc && vite build && electron-builder --win",
+    "build:mac": "tsc && vite build && electron-builder --mac",
+    "build:linux": "tsc && vite build && electron-builder --linux",
+    "publish": "tsc && vite build && electron-builder --publish always",
     "preview": "vite preview"
   },
   "dependencies": {
