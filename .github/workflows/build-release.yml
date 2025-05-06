@@ -106,6 +106,12 @@ jobs:
             !packages/desktop/release/*/win-unpacked
             !packages/desktop/release/*/mac
             !packages/desktop/release/*/linux-unpacked
+            packages/desktop/release/*.AppImage
+            packages/desktop/release/*.deb
+            packages/desktop/release/*.rpm
+            packages/desktop/release/*.exe
+            packages/desktop/release/*.dmg
+            packages/desktop/release/*.yml
 
   release:
     needs: build
