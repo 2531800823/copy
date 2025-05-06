@@ -89,11 +89,11 @@ jobs:
 
           # 构建应用
           if [ "${{ runner.os }}" = "Windows" ]; then
-            pnpm build:win
+            pnpm publish:win
           elif [ "${{ runner.os }}" = "macOS" ]; then
-            pnpm build:mac
+            pnpm publish:mac
           else
-            pnpm build:linux
+            pnpm publish:linux
           fi
         shell: bash
 

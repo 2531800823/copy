@@ -65,7 +65,10 @@
       "provider": "github",
       "owner": "2531800823",
       "repo": "copy",
-      "releaseType": "release"
+      "releaseType": "release",
+      "private": false,
+      "publishAutoUpdate": true
     }
-  ]
+  ],
+  "generateUpdatesFilesForAllChannels": true
 }
