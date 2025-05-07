@@ -195,7 +195,7 @@ function createWindow() {
       logger.info('Window', `url: ${WEB_URL}`)
       win?.loadURL(WEB_URL)
       win.webContents.openDevTools()
-      return;
+      return
     }
     // 使用自定义app://协议加载HTML文件，解决资源路径问题
     const appUrl = `app://./index.html`
@@ -261,11 +261,6 @@ function setupProtocol() {
  * 配置自动更新
  */
 function setupAutoUpdater() {
-  if (isDev) {
-    logger.info('Updater', '开发环境下不启用自动更新')
-    return;
-  }
-
   logger.info('Updater', '初始化自动更新模块')
 
   // 配置日志
@@ -277,15 +272,45 @@ function setupAutoUpdater() {
   // 配置允许降级（可选，默认为false）
   autoUpdater.allowDowngrade = false
 
+  // 强制开发环境也检查更新
+  if (isDev) {
+    logger.info('Updater', '开发环境下强制启用自动更新')
+    // 开发环境强制检查更新
+    autoUpdater.forceDevUpdateConfig = true;
+  }
+
+  // 配置更新服务器（明确指定更新服务器地址）
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: '2531800823',
+    repo: 'copy',
+    releaseType: 'release',
+    private: false,
+    publishAutoUpdate: true
+  })
+
   // 错误处理
   autoUpdater.on('error', (error) => {
     logger.error('Updater', '更新错误', error)
-    dialog.showErrorBox('更新出错', `检查更新时出现错误: ${error.message}`)
+    logger.error('Updater', `更新URL: ${autoUpdater.getFeedURL()}`)
+
+    // 显示更详细的错误信息
+    const errorMessage = `检查更新时出现错误: ${error.message}`;
+    if (error.stack) {
+      logger.error('Updater', `错误堆栈: ${error.stack}`);
+    }
+
+    dialog.showErrorBox('更新出错', errorMessage);
+
+    if (win) {
+      win.webContents.send('update-error', error);
+    }
   });
 
   // 检查更新中
   autoUpdater.on('checking-for-update', () => {
     logger.info('Updater', '正在检查更新...')
+    logger.info('Updater', `更新URL: ${autoUpdater.getFeedURL()}`)
   });
 
   // 有可用更新
@@ -335,7 +360,19 @@ function setupAutoUpdater() {
   // 延迟5秒后检查更新，避免应用启动时的性能影响
   setTimeout(() => {
     logger.info('Updater', '开始检查更新')
-    autoUpdater.checkForUpdates().catch((err) => {
+    logger.info('Updater', `当前版本: ${app.getVersion()}`)
+    logger.info('Updater', `更新源: ${autoUpdater.getFeedURL()}`)
+    logger.info('Updater', `是否开发环境: ${isDev}`)
+    logger.info('Updater', `强制检查开发更新: ${autoUpdater.forceDevUpdateConfig}`)
+
+    autoUpdater.checkForUpdates().then((result) => {
+      logger.info('Updater', '检查更新结果', result)
+      if (result && result.updateInfo) {
+        logger.info('Updater', `找到的版本: ${result.updateInfo.version}`)
+        logger.info('Updater', `发布时间: ${result.updateInfo.releaseDate}`)
+        logger.info('Updater', `发布页面: ${result.updateInfo.releaseNotes || '无'}`)
+      }
+    }).catch((err) => {
       logger.error('Updater', '检查更新失败', err)
     });
   }, 5000)
