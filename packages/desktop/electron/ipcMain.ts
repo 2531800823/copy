@@ -2,6 +2,7 @@ import type {
   BrowserWindow,
 } from 'electron';
 import {
+  app,
   ipcMain,
 } from 'electron'
 import { autoUpdater } from 'electron-updater'
@@ -16,13 +17,20 @@ export const IpcChannel = {
   DOWNLOAD_UPDATE: 'updater:download',
   /** 安装更新 */
   INSTALL_UPDATE: 'updater:install',
+  /** 获取应用版本 */
+  GET_APP_VERSION: 'get-app-version',
 };
 
 function initIpcMain(win: BrowserWindow) {
   ipcMain.handle(IpcChannel.TOGGLE_WINDOW_TOP, (e, message) => {
-    console.log(message);
     win.setAlwaysOnTop(message);
   })
+
+  // 获取应用版本
+  ipcMain.handle(IpcChannel.GET_APP_VERSION, () => {
+    logger.info('IPC', '获取应用版本')
+    return app.getVersion()
+  });
 
   // 检查更新
   ipcMain.handle(IpcChannel.CHECK_FOR_UPDATES, async () => {

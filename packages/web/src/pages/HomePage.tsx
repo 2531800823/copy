@@ -2,16 +2,16 @@ import { IconDeleteStroked, IconDownloadStroked, IconForwardStroked, IconMoreStr
 import { IconForm, IconTag } from '@douyinfe/semi-icons-lab'
 import { Button, Dropdown, Switch, Tooltip } from '@douyinfe/semi-ui';
 import React, { useEffect, useState } from 'react';
-import { Toaster } from 'react-hot-toast'
-import CardList from '../components/CardList/CardList';
-import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal'
-import TagModal from '../components/Modal/TagModal/TagModal';
-import TextModalModal from '../components/Modal/TextModal/TextModal';
-import { Tags } from '../components/Tags'
-import useCardStore from '../store/useCardStore';
-import { clearAllBackups } from '../utils/clean'
-import { handleExportJSON } from '../utils/exportFile';
-import styles from './HomePage.module.less'
+import { Link } from 'react-router-dom'
+import CardList from '../components/CardList/CardList'
+import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal';
+import TagModal from '../components/Modal/TagModal/TagModal'
+import TextModalModal from '../components/Modal/TextModal/TextModal'
+import { Tags } from '../components/Tags';
+import useCardStore from '../store/useCardStore'
+import { clearAllBackups } from '../utils/clean';
+import { handleExportJSON } from '../utils/exportFile'
+import styles from './HomePage.module.less';
 
 /**
  * 主页面组件
@@ -154,7 +154,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className={styles.homePage}>
-      <Toaster />
       <header className={styles.header}>
         <Tags />
         {/* 按钮组 */}

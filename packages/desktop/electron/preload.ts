@@ -1,6 +1,6 @@
-import type { LogIpcChannel } from './logger/ipc';
-import { contextBridge, ipcRenderer } from 'electron';
-import { IpcChannel } from './ipcMain';
+import type { LogIpcChannel } from './logger/ipc'
+import { contextBridge, ipcRenderer } from 'electron'
+import { IpcChannel } from './ipcMain'
 
 // 日志接口类型
 interface LogAPI {
@@ -28,6 +28,8 @@ interface UpdaterAPI {
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
+  /** 获取应用版本 */
+  getVersion: () => ipcRenderer.invoke(IpcChannel.GET_APP_VERSION),
   on(...args: Parameters<typeof ipcRenderer.on>) {
     const [channel, listener] = args
     return ipcRenderer.on(channel, (event, ...args) => listener(event, ...args))
@@ -45,8 +47,6 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     return ipcRenderer.invoke(channel, ...omit)
   },
 
-  // You can expose other APTs you need here.
-  // ...
   toggleWindowTop: (message: boolean) => ipcRenderer.invoke(IpcChannel.TOGGLE_WINDOW_TOP, message),
 })
 

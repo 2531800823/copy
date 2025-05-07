@@ -6,6 +6,7 @@ interface Window {
     send: (channel: string, ...args: any[]) => void
     invoke: <T = any>(channel: string, ...args: any[]) => Promise<T>
     toggleWindowTop: (message: boolean) => Promise<void>
+    getVersion: () => Promise<string>
   }
 
   // 添加日志API

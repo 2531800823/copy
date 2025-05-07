@@ -91,7 +91,6 @@ function createWindow() {
   logger.info('Window', '正在创建主窗口')
 
   win = new BrowserWindow({
-    icon: path.join(PUBLIC, 'electron-vite.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       // 允许跨域访问

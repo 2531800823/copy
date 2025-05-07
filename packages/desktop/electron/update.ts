@@ -31,8 +31,6 @@ export function setupAutoUpdater() {
     owner: '2531800823',
     repo: 'copy',
     releaseType: 'release',
-    private: false,
-    publishAutoUpdate: true,
   });
 
   // 错误处理
