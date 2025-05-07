@@ -1,17 +1,18 @@
-import { IconDeleteStroked, IconDownloadStroked, IconForwardStroked, IconMoreStroked } from '@douyinfe/semi-icons'
+import { IconDeleteStroked, IconDownloadStroked, IconEdit, IconForwardStroked, IconMoreStroked } from '@douyinfe/semi-icons'
 import { IconForm, IconTag } from '@douyinfe/semi-icons-lab'
 import { Button, Dropdown, Switch, Tooltip } from '@douyinfe/semi-ui';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'
 import CardList from '../components/CardList/CardList'
-import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal';
-import TagModal from '../components/Modal/TagModal/TagModal'
-import TextModalModal from '../components/Modal/TextModal/TextModal'
-import { Tags } from '../components/Tags';
-import useCardStore from '../store/useCardStore'
-import { clearAllBackups } from '../utils/clean';
-import { handleExportJSON } from '../utils/exportFile'
-import styles from './HomePage.module.less';
+import EditorTagModal from '../components/Modal/EditorTagModal/EditorTagModal'
+import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal'
+import TagModal from '../components/Modal/TagModal/TagModal';
+import TextModalModal from '../components/Modal/TextModal/TextModal';
+import { Tags } from '../components/Tags'
+import useCardStore from '../store/useCardStore';
+import { clearAllBackups } from '../utils/clean'
+import { handleExportJSON } from '../utils/exportFile';
+import styles from './HomePage.module.less'
 
 /**
  * 主页面组件
@@ -21,6 +22,7 @@ const HomePage: React.FC = () => {
   const [textVisible, setTextVisible] = useState(false);
   const [importJsonVisible, setImportJsonVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [editTagVisible, setEditTagVisible] = useState(false)
 
   // 获取store中的卡片和标签数据
   const { cards, tags } = useCardStore();
@@ -29,7 +31,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 500);
-    }
+    };
 
     // 初始化检查
     checkScreenSize();
@@ -46,6 +48,12 @@ const HomePage: React.FC = () => {
    */
   const dropdownMenu = (
     <Dropdown.Menu>
+      <Dropdown.Item
+        icon={<IconEdit />}
+        onClick={() => { setVisible(true); }}
+      >
+        管理 tag
+      </Dropdown.Item>
       <Dropdown.Item
         icon={<IconTag />}
         onClick={() => { setVisible(true); }}
@@ -90,6 +98,16 @@ const HomePage: React.FC = () => {
   const renderButtonGroup = () => {
     return (
       <>
+        {/* 编辑 tag */}
+        <Tooltip content="管理 tag">
+          <Button
+            icon={<IconEdit />}
+            theme="borderless"
+            size="small"
+            aria-label="管理 tag"
+            onClick={() => { setEditTagVisible(true); }}
+          />
+        </Tooltip>
         <Tooltip content="添加 tag">
           <Button
             icon={<IconTag />}
@@ -150,7 +168,7 @@ const HomePage: React.FC = () => {
         </Tooltip>
       </>
     );
-  }
+  };
 
   return (
     <div className={styles.homePage}>
@@ -208,8 +226,18 @@ const HomePage: React.FC = () => {
         onOk={() => { setImportJsonVisible(false); }}
         onCancel={() => { setImportJsonVisible(false); }}
       />
+
+      <EditorTagModal
+        visible={!!editTagVisible}
+        onOk={() => {
+          setEditTagVisible(false)
+        }}
+        onCancel={() => {
+          setEditTagVisible(false)
+        }}
+      />
     </div>
   );
-}
+};
 
 export default HomePage;

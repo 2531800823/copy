@@ -31,14 +31,14 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
     setActiveTag([tags[0].id]);
     onOk();
 
-  };
+  }
 
   const handleTagClick = (id: string) => {
     if (activeTag.includes(id)) {
       setActiveTag(activeTag.filter(tag => tag !== id));
     }
     else {
-      setActiveTag([...activeTag, id]);
+      setActiveTag([id]);
     }
   }
 
@@ -75,6 +75,6 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
       </div>
     </Modal>
   );
-}
+};
 
 export default TextModalModal

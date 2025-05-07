@@ -1,7 +1,7 @@
 {
   "name": "desktop",
   "type": "module",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "private": true,
   "description": "Electron desktop application",
   "author": "2531800823@qq.com",
@@ -24,6 +24,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "electron-store": "^10.0.1",
     "electron-updater": "^6.1.7",
     "log4js": "^6.9.1"
   },

@@ -23,7 +23,47 @@ interface ImportMeta {
   }
 }
 
+// 自定义IPC接口
+interface CustomIpcRenderer {
+  getVersion: () => Promise<string>
+  on: (channel: string, func: (...args: any[]) => void) => void
+  off: (channel: string) => void
+  send: (channel: string, ...args: any[]) => void
+  invoke: <T = any>(channel: string, ...args: any[]) => Promise<T>
+  toggleWindowTop: (message: boolean) => Promise<void>
+}
+
+// 窗口配置类型
+interface WindowConfig {
+  width?: number
+  height?: number
+  x?: number
+  y?: number
+  isMaximized?: boolean
+}
+
+// 窗口配置接口类型
+interface WindowConfigAPI {
+  getConfig: () => Promise<WindowConfig>
+  saveConfig: (config: WindowConfig) => Promise<boolean>
+}
+
+// 更新接口类型
+interface UpdaterAPI {
+  checkForUpdates: () => Promise<void>
+  downloadUpdate: () => Promise<void>
+  quitAndInstall: () => Promise<void>
+  onUpdateAvailable: (callback: (info: any) => void) => void
+  onUpdateNotAvailable: (callback: (info: any) => void) => void
+  onUpdateProgress: (callback: (progress: any) => void) => void
+  onUpdateDownloaded: (callback: (info: any) => void) => void
+  onUpdateError: (callback: (error: any) => void) => void
+}
+
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
-  ipcRenderer: import('electron').IpcRenderer
+  ipcRenderer: CustomIpcRenderer
+  logger: LogAPI
+  updater: UpdaterAPI
+  windowConfig: WindowConfigAPI
 }

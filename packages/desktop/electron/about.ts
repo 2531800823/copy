@@ -1,7 +1,9 @@
 import path from 'node:path';
-import { BrowserWindow } from 'electron';
-import { isDev, WEB_URL } from './main'
+import { fileURLToPath } from 'node:url'
+import { BrowserWindow } from 'electron'
+import { isDev, WEB_URL } from './main';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 /**
  * 打开关于我们
  */
@@ -25,9 +27,9 @@ export function toAbout() {
   });
 
   if (isDev) {
-    win?.loadURL(`${WEB_URL}/about`)
+    win?.loadURL(`${WEB_URL}/#/about`)
   }
   else {
-    win.loadURL(`app://./about`)
+    win.loadURL(`app://./index.html#/about`)
   }
 }

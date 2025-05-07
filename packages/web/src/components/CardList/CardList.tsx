@@ -46,11 +46,10 @@ const CardList: React.FC = () => {
 
   const [stateEditorTextVisible, setEditorTextVisible] = useState(false)
   const [stateEditorTextId, setEditorTextId] = useState<string>()
-  console.log('🚀 liu123 ~ stateEditorTextId:', stateEditorTextId)
   const handleEditorText = (id: string) => {
     setEditorTextVisible(true)
     setEditorTextId(id)
-  };
+  }
 
   return (
     <div className={styles.cardList}>
@@ -90,6 +89,6 @@ const CardList: React.FC = () => {
       )}
     </div>
   );
-}
+};
 
 export default CardList;

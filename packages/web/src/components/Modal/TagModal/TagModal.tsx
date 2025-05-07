@@ -13,7 +13,6 @@ interface TagModalProps {
 const TagModal: FC<TagModalProps> = (props) => {
   const { visible, onOk, onCancel } = props;
   const { addTag } = useCardStore();
-  console.log('TagModal');
   const [name, setName] = useState('');
 
   const handleOk = () => {
@@ -27,7 +26,7 @@ const TagModal: FC<TagModalProps> = (props) => {
     })
     onOk();
 
-  }
+  };
 
   return (
     <Modal
@@ -41,6 +40,6 @@ const TagModal: FC<TagModalProps> = (props) => {
       <Input placeholder="请输入标签名称" value={name} onChange={setName} />
     </Modal>
   );
-};
+}
 
 export default TagModal

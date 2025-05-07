@@ -1,12 +1,13 @@
 import type {
   BrowserWindow,
-} from 'electron';
+} from 'electron'
 import {
   app,
   ipcMain,
-} from 'electron'
-import { autoUpdater } from 'electron-updater'
-import logger from './logger'
+} from 'electron';
+import { autoUpdater } from 'electron-updater';
+import logger from './logger';
+import { getWindowConfig, saveWindowConfig } from './store'
 
 export const IpcChannel = {
   /** 窗口置顶 */
@@ -19,48 +20,67 @@ export const IpcChannel = {
   INSTALL_UPDATE: 'updater:install',
   /** 获取应用版本 */
   GET_APP_VERSION: 'get-app-version',
-};
+  /** 获取窗口配置 */
+  GET_WINDOW_CONFIG: 'get-window-config',
+  /** 保存窗口配置 */
+  SAVE_WINDOW_CONFIG: 'save-window-config',
+}
 
-function initIpcMain(win: BrowserWindow) {
-  ipcMain.handle(IpcChannel.TOGGLE_WINDOW_TOP, (e, message) => {
-    win.setAlwaysOnTop(message);
-  })
+/**
+ * 初始化 IPC 主进程
+ * @param mainWindow 主窗口实例
+ */
+export default function initIpcMain(mainWindow: BrowserWindow) {
+  // 置顶窗口
+  ipcMain.handle(IpcChannel.TOGGLE_WINDOW_TOP, (_event, flag) => {
+    if (!mainWindow)
+      return
+
+    mainWindow.setAlwaysOnTop(flag)
+    logger.info('IPC', `窗口置顶状态: ${flag}`)
+  });
 
   // 获取应用版本
-  ipcMain.handle(IpcChannel.GET_APP_VERSION, () => {
-    logger.info('IPC', '获取应用版本')
-    return app.getVersion()
+  ipcMain.handle(IpcChannel.GET_APP_VERSION, () => app.getVersion())
+
+  // 获取窗口配置
+  ipcMain.handle(IpcChannel.GET_WINDOW_CONFIG, () => {
+    logger.debug('IPC', '获取窗口配置')
+    return getWindowConfig()
+  });
+
+  // 保存窗口配置
+  ipcMain.handle(IpcChannel.SAVE_WINDOW_CONFIG, (_event, config) => {
+    logger.debug('IPC', '保存窗口配置', config)
+    saveWindowConfig(config)
+    return true
   });
 
   // 检查更新
   ipcMain.handle(IpcChannel.CHECK_FOR_UPDATES, async () => {
-    logger.info('IPC', '收到检查更新请求')
     try {
       return await autoUpdater.checkForUpdates()
     }
     catch (error) {
-      logger.error('IPC', '检查更新出错', error)
-      throw error
+      logger.error('Updater', '检查更新失败', error)
+      return null
     }
   })
 
-  // 下载更新 (如果设置了autoDownload为false，可以手动触发下载)
+  // 下载更新
   ipcMain.handle(IpcChannel.DOWNLOAD_UPDATE, async () => {
-    logger.info('IPC', '收到下载更新请求')
     try {
       return await autoUpdater.downloadUpdate()
     }
     catch (error) {
-      logger.error('IPC', '下载更新出错', error)
+      logger.error('Updater', '下载更新失败', error)
       throw error
     }
   })
 
   // 安装更新
   ipcMain.handle(IpcChannel.INSTALL_UPDATE, () => {
-    logger.info('IPC', '收到安装更新请求')
+    logger.info('Updater', '退出并安装更新')
     autoUpdater.quitAndInstall(false, true)
   });
 }
-
-export default initIpcMain

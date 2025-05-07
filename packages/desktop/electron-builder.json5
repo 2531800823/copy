@@ -9,13 +9,19 @@
   },
   "files": [
     "dist",
-    "dist-electron",
-    "../web/dist/**/*"
+    "dist-electron"
   ],
   "extraResources": [
     {
       "from": "../web/dist/",
       "to": "web/dist",
+      "filter": ["**/*"]
+    }
+  ],
+  "extraFiles": [
+    {
+      "from": "../web/dist/",
+      "to": "resources/web/dist",
       "filter": ["**/*"]
     }
   ],
