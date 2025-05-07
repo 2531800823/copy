@@ -9,11 +9,12 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import useCardStore from '../../store/useCardStore';
 import { useDragSensors } from '../../utils/dndUtils'
 import Card from '../Card/Card'
-import styles from './CardList.module.less';
+import EditorTextModal from '../Modal/EditorTextModal/EditorTextModal'
+import styles from './CardList.module.less'
 
 const defaultTag = 'all';
 
@@ -43,6 +44,14 @@ const CardList: React.FC = () => {
     return cards.filter(card => card.tags.includes(activeTag));
   }, [cards, activeTag]);
 
+  const [stateEditorTextVisible, setEditorTextVisible] = useState(false)
+  const [stateEditorTextId, setEditorTextId] = useState<string>()
+  console.log('🚀 liu123 ~ stateEditorTextId:', stateEditorTextId)
+  const handleEditorText = (id: string) => {
+    setEditorTextVisible(true)
+    setEditorTextId(id)
+  };
+
   return (
     <div className={styles.cardList}>
       <DndContext
@@ -56,6 +65,7 @@ const CardList: React.FC = () => {
         >
           {currentCards.map(card => (
             <Card
+              onHandleEditorText={handleEditorText}
               key={card.id}
               card={card}
               tags={tags}
@@ -64,8 +74,22 @@ const CardList: React.FC = () => {
           ))}
         </SortableContext>
       </DndContext>
+      {stateEditorTextId && (
+        <EditorTextModal
+          id={stateEditorTextId}
+          onCancel={() => {
+            setEditorTextVisible(false)
+            setEditorTextId(undefined);
+          }}
+          onOk={() => {
+            setEditorTextVisible(false);
+            setEditorTextId(undefined);
+          }}
+          visible={stateEditorTextVisible}
+        />
+      )}
     </div>
   );
-};
+}
 
 export default CardList;

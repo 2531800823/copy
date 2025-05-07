@@ -14,6 +14,7 @@ interface CardProps {
   tags: Tag[]
   isHighlighted?: boolean
   searchTerm?: string
+  onHandleEditorText: (id: string) => void
 }
 
 /**
@@ -22,6 +23,7 @@ interface CardProps {
 const Card: React.FC<CardProps> = ({
   card,
   isHighlighted = false,
+  onHandleEditorText,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const { deleteCard } = useCardStore();
@@ -87,12 +89,13 @@ const Card: React.FC<CardProps> = ({
             size="small"
             aria-label="更改内容"
             onClick={(e) => {
+              onHandleEditorText(card.id)
               e.stopPropagation();
             }}
           />
         </Tooltip>
 
-        <Tooltip content="清除备份数据">
+        <Tooltip content="删除卡片">
           <Button
             icon={<IconDeleteStroked />}
             theme="borderless"
@@ -108,6 +111,6 @@ const Card: React.FC<CardProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default Card;

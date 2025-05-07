@@ -2,25 +2,32 @@ import type { FC } from 'react';
 import { Input, Modal, TextArea } from '@douyinfe/semi-ui'
 import classnames from 'classnames';
 import { useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import useCardStore from '../../../store/useCardStore'
-import styles from './TextModal.module.less'
+import styles from './EditorTextModal.module.less'
 
 interface TextModalModalProps {
+  id: string
   visible: boolean
   onOk: () => void
   onCancel: () => void
 }
 
-const TextModalModal: FC<TextModalModalProps> = (props) => {
-  const { visible, onOk, onCancel } = props;
-  const { tags, addCard } = useCardStore();
-  const [activeTag, setActiveTag] = useState<string[]>([tags[0].id]);
-  const [content, setContent] = useState('');
-  const [title, setTitle] = useState('');
+const EditorTextModal: FC<TextModalModalProps> = (props) => {
+  const { id, visible, onOk, onCancel } = props;
+
+  const { cards, tags, updateCard } = useCardStore();
+
+  const card = cards.find(item => item.id === id)
+  console.log('🚀 liu123 ~ card:', card)
+
+  const [activeTag, setActiveTag] = useState<string[]>(card?.tags ?? [tags[0].id]);
+
+  const [content, setContent] = useState(card?.content ?? '');
+
+  const [title, setTitle] = useState(card?.title ?? '');
+
   const handleOk = () => {
-    addCard({
-      id: uuidv4(),
+    updateCard(id, {
       content,
       title,
       tags: activeTag,
@@ -31,7 +38,7 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
     setActiveTag([tags[0].id]);
     onOk();
 
-  };
+  }
 
   const handleTagClick = (id: string) => {
     if (activeTag.includes(id)) {
@@ -44,7 +51,7 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
 
   return (
     <Modal
-      title="添加文本"
+      title="修改文本"
       visible={visible}
       onOk={handleOk}
       afterClose={onCancel}
@@ -75,6 +82,6 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
       </div>
     </Modal>
   );
-}
+};
 
-export default TextModalModal
+export default EditorTextModal
