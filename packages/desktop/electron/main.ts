@@ -1,13 +1,17 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import process from 'node:process'
-import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, dialog, Menu, nativeImage, net, protocol, Tray } from 'electron'
+import type { Tray } from 'electron';
+import fs from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
+import { app, BrowserWindow, dialog, Menu, nativeImage, net, protocol } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import initIpcMain from './ipcMain';
 import logger from './logger';
 import { LogIpcManager } from './logger/ipc';
 import { LogUtils } from './logger/utils';
+import { setupProtocol } from './protocol'
+import { createTray, tray } from './tray'
+import { setupAutoUpdater } from './update';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -52,8 +56,6 @@ export const WEB_URL = import.meta.env.VITE_WEB_URL
 /** 主窗口实例 */
 // eslint-disable-next-line import/no-mutable-exports
 export let win: BrowserWindow | null
-/** 托盘图标实例 */
-let tray: Tray | null = null
 
 // 安全性设置，允许加载本地资源 - 必须在app ready之前调用
 protocol.registerSchemesAsPrivileged([
@@ -80,71 +82,6 @@ function initApp() {
   setupAutoUpdater()
 
   logger.info('App', '应用初始化完成')
-}
-
-/**
- * 创建系统托盘图标
- */
-function createTray() {
-  logger.info('Tray', '正在创建系统托盘图标')
-
-  // 加载托盘图标
-  const iconPath = path.join(PUBLIC, 'electron-vite.svg')
-  const icon = nativeImage.createFromPath(iconPath)
-
-  tray = new Tray(icon)
-  tray.setToolTip('我的应用')
-
-  // 创建托盘菜单
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: '置顶窗口',
-      type: 'checkbox',
-      checked: false,
-      click: (menuItem) => {
-        if (!win)
-          return;
-
-        win.setAlwaysOnTop(menuItem.checked)
-        logger.info('Tray', `窗口置顶状态: ${menuItem.checked}`)
-      },
-    },
-    { type: 'separator' },
-    {
-      label: '显示窗口',
-      click: () => {
-        if (win) {
-          win.show()
-          win.focus()
-        }
-      },
-    },
-    { type: 'separator' },
-    {
-      label: '退出',
-      click: () => {
-        app.quit()
-      },
-    },
-  ]);
-
-  // 设置托盘菜单
-  tray.setContextMenu(contextMenu)
-
-  // 点击托盘图标时显示窗口
-  tray.on('click', () => {
-    if (win) {
-      if (win.isVisible()) {
-        win.hide()
-      }
-      else {
-        win.show()
-        win.focus()
-      }
-    }
-  })
-
-  logger.info('Tray', '系统托盘图标创建完成')
 }
 
 /**
@@ -211,173 +148,6 @@ function createWindow() {
   }
 }
 
-/**
- * 设置自定义协议，解决静态资源加载问题
- */
-function setupProtocol() {
-  if (isDev) {
-    return
-  }
-
-  logger.debug('Protocol', '设置app://协议处理器')
-
-  // 注册app协议
-  protocol.handle('app', (request) => {
-    const url = request.url.slice('app://'.length)
-    const decodedUrl = decodeURI(url)
-
-    try {
-      // 如果URL是根路径，直接返回index.html
-      let filePath
-      if (decodedUrl === './' || decodedUrl === '.') {
-        filePath = path.join(RENDERER_DIST, 'index.html')
-      }
-      else {
-        // 否则尝试从渲染进程的dist目录解析文件
-        filePath = path.join(RENDERER_DIST, decodedUrl)
-      }
-
-      logger.debug('Protocol', `请求资源: ${request.url} -> ${filePath}`)
-      console.log('请求资源:', request.url, '->>', filePath)
-
-      // 检查文件是否存在
-      if (fs.existsSync(filePath)) {
-        return net.fetch(`file://${filePath}`)
-      }
-
-      logger.warn('Protocol', `文件不存在: ${filePath}`)
-      console.warn(`文件不存在: ${filePath}`)
-      return new Response(null, { status: 404 })
-    }
-    catch (error) {
-      logger.error('Protocol', '加载资源失败', error)
-      console.error('加载资源失败:', error)
-      return new Response(null, { status: 500 })
-    }
-  })
-}
-
-/**
- * 配置自动更新
- */
-function setupAutoUpdater() {
-  logger.info('Updater', '初始化自动更新模块')
-
-  // 配置日志
-  autoUpdater.logger = logger.getLogger()
-
-  // 配置自动下载
-  autoUpdater.autoDownload = true
-
-  // 配置允许降级（可选，默认为false）
-  autoUpdater.allowDowngrade = false
-
-  // 强制开发环境也检查更新
-  if (isDev) {
-    logger.info('Updater', '开发环境下强制启用自动更新')
-    // 开发环境强制检查更新
-    autoUpdater.forceDevUpdateConfig = true;
-  }
-
-  // 配置更新服务器（明确指定更新服务器地址）
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner: '2531800823',
-    repo: 'copy',
-    releaseType: 'release',
-    private: false,
-    publishAutoUpdate: true
-  })
-
-  // 错误处理
-  autoUpdater.on('error', (error) => {
-    logger.error('Updater', '更新错误', error)
-    logger.error('Updater', `更新URL: ${autoUpdater.getFeedURL()}`)
-
-    // 显示更详细的错误信息
-    const errorMessage = `检查更新时出现错误: ${error.message}`;
-    if (error.stack) {
-      logger.error('Updater', `错误堆栈: ${error.stack}`);
-    }
-
-    dialog.showErrorBox('更新出错', errorMessage);
-
-    if (win) {
-      win.webContents.send('update-error', error);
-    }
-  });
-
-  // 检查更新中
-  autoUpdater.on('checking-for-update', () => {
-    logger.info('Updater', '正在检查更新...')
-    logger.info('Updater', `更新URL: ${autoUpdater.getFeedURL()}`)
-  });
-
-  // 有可用更新
-  autoUpdater.on('update-available', (info) => {
-    logger.info('Updater', '发现新版本', info)
-    dialog.showMessageBox({
-      type: 'info',
-      title: '发现新版本',
-      message: `发现新版本: ${info.version}`,
-      detail: '正在自动下载更新，下载完成后将提示您安装',
-      buttons: ['确定'],
-    })
-  });
-
-  // 没有可用更新
-  autoUpdater.on('update-not-available', (info) => {
-    logger.info('Updater', '当前已是最新版本', info)
-  });
-
-  // 更新下载进度
-  autoUpdater.on('download-progress', (progressObj) => {
-    const logMessage = `下载速度: ${progressObj.bytesPerSecond} - 已下载 ${Math.round(progressObj.percent)}% (${progressObj.transferred}/${progressObj.total})`
-    logger.info('Updater', logMessage)
-    if (win) {
-      win.webContents.send('update-progress', progressObj)
-    }
-  })
-
-  // 更新下载完成
-  autoUpdater.on('update-downloaded', (info) => {
-    logger.info('Updater', '更新已下载，准备安装', info)
-
-    dialog.showMessageBox({
-      type: 'info',
-      title: '安装更新',
-      message: '更新已下载',
-      detail: '新版本已下载完成，应用将重启并安装',
-      buttons: ['立即安装', '稍后安装'],
-    }).then((returnValue) => {
-      if (returnValue.response === 0) {
-        // 关闭应用并安装更新
-        autoUpdater.quitAndInstall(false, true)
-      }
-    })
-  });
-
-  // 延迟5秒后检查更新，避免应用启动时的性能影响
-  setTimeout(() => {
-    logger.info('Updater', '开始检查更新')
-    logger.info('Updater', `当前版本: ${app.getVersion()}`)
-    logger.info('Updater', `更新源: ${autoUpdater.getFeedURL()}`)
-    logger.info('Updater', `是否开发环境: ${isDev}`)
-    logger.info('Updater', `强制检查开发更新: ${autoUpdater.forceDevUpdateConfig}`)
-
-    autoUpdater.checkForUpdates().then((result) => {
-      logger.info('Updater', '检查更新结果', result)
-      if (result && result.updateInfo) {
-        logger.info('Updater', `找到的版本: ${result.updateInfo.version}`)
-        logger.info('Updater', `发布时间: ${result.updateInfo.releaseDate}`)
-        logger.info('Updater', `发布页面: ${result.updateInfo.releaseNotes || '无'}`)
-      }
-    }).catch((err) => {
-      logger.error('Updater', '检查更新失败', err)
-    });
-  }, 5000)
-}
-
 app.on('window-all-closed', () => {
   logger.info('App', '所有窗口已关闭')
 
@@ -409,6 +179,5 @@ app.on('before-quit', () => {
   // 销毁托盘图标
   if (tray) {
     tray.destroy()
-    tray = null
   }
 })
