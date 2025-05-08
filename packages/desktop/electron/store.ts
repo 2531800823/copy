@@ -29,6 +29,8 @@ interface WindowConfig {
 interface AppConfig {
   /** 窗口配置 */
   window?: WindowConfig
+  /** 自动启动配置 */
+  autoLaunch?: boolean
 }
 
 /**
@@ -43,6 +45,7 @@ const store = new Store<AppConfig>({
       width: 800,
       height: 600,
     },
+    autoLaunch: true, // 默认自动启动
   },
 })
 
@@ -71,6 +74,34 @@ export function saveWindowConfig(config: WindowConfig): void {
   }
   catch (error) {
     logger.error('Store', '保存窗口配置失败', error)
+  }
+}
+
+/**
+ * 获取自动启动配置
+ * @returns 是否自动启动
+ */
+export function getAutoLaunch(): boolean {
+  try {
+    return store.get('autoLaunch') || true
+  }
+  catch (error) {
+    logger.error('Store', '获取自动启动配置失败', error)
+    return true
+  }
+}
+
+/**
+ * 设置自动启动配置
+ * @param enable 是否启用自动启动
+ */
+export function setAutoLaunch(enable: boolean): void {
+  try {
+    store.set('autoLaunch', enable)
+    logger.debug('Store', `设置自动启动: ${enable}`)
+  }
+  catch (error) {
+    logger.error('Store', '设置自动启动配置失败', error)
   }
 }
 

@@ -89,6 +89,12 @@ const HomePage: React.FC = () => {
       >
         清除备份数据
       </Dropdown.Item>
+      <Dropdown.Divider />
+      <Dropdown.Item
+        onClick={() => { window.location.href = '/#/settings'; }}
+      >
+        设置
+      </Dropdown.Item>
     </Dropdown.Menu>
   );
 
@@ -165,6 +171,19 @@ const HomePage: React.FC = () => {
             aria-label="清除备份数据"
             onClick={clearAllBackups}
           />
+        </Tooltip>
+
+        {/* 设置页面 */}
+        <Tooltip content="设置">
+          <Link to="/settings">
+            <Button
+              theme="borderless"
+              size="small"
+              aria-label="设置"
+            >
+              设置
+            </Button>
+          </Link>
         </Tooltip>
       </>
     );

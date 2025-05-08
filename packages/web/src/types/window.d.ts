@@ -1,28 +1,3 @@
-/// <reference types="vite-plugin-electron/electron-env" />
-
-declare namespace NodeJS {
-  interface ProcessEnv {
-    APP_ROOT: string
-    /** /dist/ or /public/ */
-    VITE_PUBLIC: string
-    VITE_WEB_URL: string
-  }
-  interface ImportMetaEnv {
-    readonly VITE_WEB_URL: string
-  }
-}
-
-// 扩展ImportMeta接口，添加env属性
-interface ImportMeta {
-  readonly env: {
-    readonly VITE_WEB_URL: string
-    readonly MODE: string
-    readonly DEV: boolean
-    readonly PROD: boolean
-    [key: string]: any
-  }
-}
-
 // 自定义IPC接口
 interface CustomIpcRenderer {
   getVersion: () => Promise<string>
@@ -54,6 +29,18 @@ interface AutoLaunchAPI {
   set: (enable: boolean) => Promise<boolean>
 }
 
+// 日志接口类型
+interface LogAPI {
+  trace: (category: string, message: string, data?: any) => Promise<any>
+  debug: (category: string, message: string, data?: any) => Promise<any>
+  info: (category: string, message: string, data?: any) => Promise<any>
+  warn: (category: string, message: string, data?: any) => Promise<any>
+  error: (category: string, message: string, data?: any) => Promise<any>
+  fatal: (category: string, message: string, data?: any) => Promise<any>
+  getLogFiles: () => Promise<any>
+  cleanupLogs: (days?: number) => Promise<any>
+}
+
 // 更新接口类型
 interface UpdaterAPI {
   checkForUpdates: () => Promise<void>
@@ -66,7 +53,7 @@ interface UpdaterAPI {
   onUpdateError: (callback: (error: any) => void) => void
 }
 
-// Used in Renderer process, expose in `preload.ts`
+// 扩展Window接口
 interface Window {
   ipcRenderer: CustomIpcRenderer
   logger: LogAPI

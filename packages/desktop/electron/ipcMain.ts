@@ -6,6 +6,7 @@ import {
   ipcMain,
 } from 'electron';
 import { autoUpdater } from 'electron-updater';
+import { getAppAutoLaunch, setAppAutoLaunch } from './autoLaunch';
 import logger from './logger';
 import { getWindowConfig, saveWindowConfig } from './store'
 
@@ -24,6 +25,10 @@ export const IpcChannel = {
   GET_WINDOW_CONFIG: 'get-window-config',
   /** 保存窗口配置 */
   SAVE_WINDOW_CONFIG: 'save-window-config',
+  /** 获取自启动状态 */
+  GET_AUTO_LAUNCH: 'get-auto-launch',
+  /** 设置自启动状态 */
+  SET_AUTO_LAUNCH: 'set-auto-launch',
 }
 
 /**
@@ -54,6 +59,18 @@ export default function initIpcMain(mainWindow: BrowserWindow) {
     logger.debug('IPC', '保存窗口配置', config)
     saveWindowConfig(config)
     return true
+  });
+
+  // 获取自启动状态
+  ipcMain.handle(IpcChannel.GET_AUTO_LAUNCH, () => {
+    logger.debug('IPC', '获取自启动状态')
+    return getAppAutoLaunch()
+  });
+
+  // 设置自启动状态
+  ipcMain.handle(IpcChannel.SET_AUTO_LAUNCH, (_event, enable) => {
+    logger.debug('IPC', `设置自启动状态: ${enable}`)
+    return setAppAutoLaunch(enable)
   });
 
   // 检查更新

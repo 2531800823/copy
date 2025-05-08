@@ -5,12 +5,13 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, dialog, Menu, nativeImage, net, protocol } from 'electron'
 import { autoUpdater } from 'electron-updater'
+import { updateAutoLaunchState } from './autoLaunch';
 import initIpcMain from './ipcMain';
 import logger from './logger';
 import { LogIpcManager } from './logger/ipc';
 import { LogUtils } from './logger/utils';
 import { setupProtocol } from './protocol'
-import { getWindowConfig, saveWindowConfig } from './store'
+import { getAutoLaunch, getWindowConfig, saveWindowConfig, setAutoLaunch } from './store'
 import { createTray, tray } from './tray';
 import { setupAutoUpdater } from './update'
 
@@ -42,8 +43,16 @@ console.log('[DEBUG] isDev:', isDev)
  */
 function getRendererPath() {
   if (isDev) {
-    return path.join(__dirname, '../../web/dist');  // 开发环境使用web/dist
+    const devPath = path.join(__dirname, '../../web/dist');  // 开发环境使用web/dist
+    console.log(`开发环境使用路径: ${devPath}`);
+    return devPath;
   }
+
+  console.log('当前应用路径信息:');
+  console.log(`- 可执行文件路径: ${app.getPath('exe')}`);
+  console.log(`- 应用程序目录: ${app.getAppPath()}`);
+  console.log(`- 用户数据目录: ${app.getPath('userData')}`);
+  console.log(`- 当前工作目录: ${process.cwd()}`);
 
   // 生产环境下尝试多个可能的路径
   const possiblePaths = [
@@ -51,23 +60,72 @@ function getRendererPath() {
     path.join(app.getPath('exe'), '../resources/web/dist'), // 相对于exe的另一种路径
     path.join(app.getAppPath(), '../web/dist'), // 应用根目录
     path.join(app.getAppPath(), 'dist'), // 默认dist目录
+    path.join(app.getAppPath(), '../../web/dist'), // 往上两级查找
+    path.join(process.cwd(), 'resources/web/dist'), // 相对于当前工作目录
+    path.join(process.cwd(), 'web/dist'), // 相对于当前工作目录
+    path.join(process.cwd(), '../web/dist'), // 相对于当前工作目录向上一级
+    path.join(app.getPath('userData'), '../web/dist'), // 相对于用户数据目录
   ];
 
-  // 检查哪个路径存在
+  // 检查每个可能的路径
   for (const testPath of possiblePaths) {
     try {
+      console.log(`检查路径: ${testPath}`);
+
       if (fs.existsSync(testPath)) {
         console.log(`找到有效的渲染进程路径: ${testPath}`);
-        return testPath;
+
+        // 检查index.html是否存在
+        const indexPath = path.join(testPath, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          console.log(`index.html存在于: ${indexPath}`);
+
+          // 列出目录内容
+          try {
+            const files = fs.readdirSync(testPath);
+            console.log(`目录内容: ${files.join(', ')}`);
+
+            return testPath;
+          }
+          catch (error: any) {
+            console.error(`无法读取目录内容: ${error.message}`);
+          }
+        }
+        else {
+          console.log(`index.html不存在于: ${indexPath}`);
+        }
       }
     }
-    catch {
+    catch (error: any) {
+      console.error(`检查路径出错: ${testPath}, 错误: ${error.message}`);
       // 忽略错误，继续检查下一个路径
     }
   }
 
-  // 如果都不存在，使用默认路径
-  return path.join(app.getPath('exe'), '../../resources/web/dist');
+  // 使用app.asar提取的路径
+  const asarPaths = [
+    path.join(app.getPath('exe'), '../resources/app.asar.unpacked/dist'),
+    path.join(app.getPath('exe'), '../resources/app.asar.unpacked/web/dist'),
+    path.join(app.getAppPath(), 'dist'),
+  ];
+
+  for (const asarPath of asarPaths) {
+    try {
+      console.log(`检查asar路径: ${asarPath}`);
+      if (fs.existsSync(asarPath)) {
+        console.log(`找到有效的asar解压渲染进程路径: ${asarPath}`);
+        return asarPath;
+      }
+    }
+    catch {
+      // 忽略错误
+    }
+  }
+
+  // 如果都不存在，返回一个默认路径，稍后会尝试多种方式加载
+  const defaultPath = path.join(app.getPath('exe'), '../../resources/web/dist');
+  console.log(`未找到有效路径，使用默认路径: ${defaultPath}`);
+  return defaultPath;
 }
 
 // 添加 Web 构建产物的路径
@@ -165,7 +223,7 @@ function createWindow() {
   const windowOptions = {
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
-      // 允许跨域访问
+      // 允许跨域访问，但关闭web安全限制以允许加载本地资源
       webSecurity: true,
       // 允许集成 Node.js 以便 web 项目可以使用 Node API
       nodeIntegration: true,
@@ -331,6 +389,9 @@ app.whenReady().then(() => {
   initApp() // 初始化应用
   setupProtocol()
   createWindow()
+
+  // 设置自启动状态
+  updateAutoLaunchState()
 });
 
 // 应用退出前记录日志
