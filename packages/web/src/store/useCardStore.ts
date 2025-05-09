@@ -18,6 +18,7 @@ interface CardState {
   addTag: (tag: Tag) => void
   updateTag: (id: string, tag: Partial<Omit<Tag, 'id'>>) => void
   deleteTag: (id: string) => void
+  reorderTags: (activeId: string, overId: string) => void
 
   setActiveTag: (id: string) => void
 
@@ -99,6 +100,29 @@ const useCardStore = create<CardState>()(
           tags: state.tags.filter(tag => tag.id !== id),
           cards: updatedCards,
         };
+      }),
+
+      /**
+       * 重新排序标签
+       * @param activeId 被拖拽的标签ID
+       * @param overId 放置目标的标签ID
+       */
+      reorderTags: (activeId, overId) => set((state) => {
+        const tags = [...state.tags];
+
+        // 找到标签在数组中的索引
+        const activeIndex = tags.findIndex(tag => tag.id === activeId);
+        const overIndex = tags.findIndex(tag => tag.id === overId);
+
+        if (activeIndex === -1 || overIndex === -1) {
+          return { tags };
+        }
+
+        // 通过移动数组元素来重新排序
+        const [movedTag] = tags.splice(activeIndex, 1);
+        tags.splice(overIndex, 0, movedTag);
+
+        return { tags };
       }),
 
       setActiveTag: id => set({ activeTag: id }),

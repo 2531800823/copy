@@ -32,7 +32,7 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
     setActiveTag([tags[0].id]);
     onOk();
 
-  }
+  };
 
   const handleTagClick = (id: string) => {
     if (activeTag.includes(id)) {
@@ -51,6 +51,7 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
       afterClose={onCancel}
       onCancel={onCancel}
       closeOnEsc={true}
+      fullScreen
     >
       <Input placeholder="请输入标题" value={title} onChange={setTitle} />
       <TextArea placeholder="请输入文本" style={{ marginTop: 12 }} autosize value={content} onChange={setContent} />
@@ -76,6 +77,6 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
       </div>
     </Modal>
   );
-};
+}
 
 export default TextModalModal

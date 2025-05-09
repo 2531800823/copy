@@ -1,7 +1,7 @@
 import type { Card as CardType, Tag } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { IconDeleteStroked } from '@douyinfe/semi-icons'
+import { IconDeleteStroked, IconEdit } from '@douyinfe/semi-icons'
 import { IconJsonViewer } from '@douyinfe/semi-icons-lab'
 import { Button, Tooltip } from '@douyinfe/semi-ui';
 import React, { useState } from 'react';
@@ -81,31 +81,29 @@ const Card: React.FC<CardProps> = ({
         className={styles.actions}
         onMouseDown={e => e.stopPropagation()} // 防止按钮区域触发拖拽
       >
-        <Tooltip content="更改内容">
-          <Button
-            icon={<IconJsonViewer />}
-            theme="borderless"
-            size="small"
-            aria-label="更改内容"
-            onClick={(e) => {
-              onHandleEditorText(card.id)
-              e.stopPropagation();
-            }}
-          />
-        </Tooltip>
+        <Button
+          icon={<IconEdit />}
+          theme="borderless"
+          size="large"
+          type="tertiary"
+          aria-label="更改内容"
+          onClick={(e) => {
+            onHandleEditorText(card.id)
+            e.stopPropagation();
+          }}
+        />
 
-        <Tooltip content="删除卡片">
-          <Button
-            icon={<IconDeleteStroked />}
-            theme="borderless"
-            size="small"
-            aria-label="删除卡片"
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteCard(card.id);
-            }}
-          />
-        </Tooltip>
+        <Button
+          icon={<IconDeleteStroked />}
+          theme="borderless"
+          size="large"
+          type="danger"
+          aria-label="删除卡片"
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteCard(card.id);
+          }}
+        />
 
       </div>
     </div>
