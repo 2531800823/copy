@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal'
 import useCardStore from '../store/useCardStore';
-import { clearAllBackups } from '../utils/clean';
-import { handleExportJSON } from '../utils/exportFile';
-import styles from './SettingsPage.module.less';
+import useSettingStore, { EnumCountSort } from '../store/useSetting'
+import { clearAllBackups } from '../utils/clean'
+import { handleExportJSON } from '../utils/exportFile'
+import styles from './SettingsPage.module.less'
 
 /**
  * 设置页面组件
@@ -69,7 +70,7 @@ const SettingsPage: React.FC = () => {
   };
 
   const [importJsonVisible, setImportJsonVisible] = useState(false);
-
+  const { countSort, setCountSort } = useSettingStore();
   return (
     <div className={styles.settingsPage}>
       <div className={styles.header}>
@@ -77,6 +78,28 @@ const SettingsPage: React.FC = () => {
         <Link to="/">
           <Button type="primary" size="small">返回首页</Button>
         </Link>
+      </div>
+
+      <div className={styles.settingSection}>
+        <h2>常规设置</h2>
+
+        <div className={styles.settingItem}>
+          <label className={styles.settingLabel}>
+            <span>
+              卡片根据复制排序：
+            </span>
+            <div className={styles.switchWrapper}>
+              <input
+                type="checkbox"
+                checked={countSort}
+                onChange={() => setCountSort(!countSort)}
+                disabled={loading}
+                className={styles.switchInput}
+              />
+              <div className={styles.switchSlider}></div>
+            </div>
+          </label>
+        </div>
       </div>
 
       <div className={styles.settingSection}>
@@ -114,7 +137,7 @@ const SettingsPage: React.FC = () => {
       </div>
 
       <div className={styles.settingSection}>
-        <h2>常规设置</h2>
+        <h2>系统设置</h2>
 
         <div className={styles.settingItem}>
           <label className={styles.settingLabel}>
@@ -144,6 +167,6 @@ const SettingsPage: React.FC = () => {
 
     </div>
   );
-}
+};
 
 export default SettingsPage;

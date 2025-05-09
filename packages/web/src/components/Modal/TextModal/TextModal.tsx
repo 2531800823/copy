@@ -25,6 +25,7 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
       title,
       tags: activeTag,
       categoryId: 'text',
+      copyCount: 0,
     })
     setTitle('');
     setContent('');

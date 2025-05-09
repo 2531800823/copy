@@ -37,6 +37,7 @@ const useCardStore = create<CardState>()(
         title: '标题',
         tags: ['1'],
         categoryId: 'text',
+        copyCount: 0,
       }],
       tags: [{ id: '1', name: '常用', color: '#4285f4' }],
       activeTag: '1',

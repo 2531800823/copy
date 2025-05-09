@@ -141,6 +141,7 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
             id: newId,
             tags: mappedTags,
             categoryId: card.categoryId || 'text',
+            copyCount: card.copyCount || 0,
           });
         })
 

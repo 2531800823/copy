@@ -11,10 +11,11 @@ import {
 } from '@dnd-kit/sortable';
 import React, { useMemo, useState } from 'react';
 import useCardStore from '../../store/useCardStore';
-import { useDragSensors } from '../../utils/dndUtils'
-import Card from '../Card/Card'
-import EditorTextModal from '../Modal/EditorTextModal/EditorTextModal'
-import styles from './CardList.module.less'
+import useSettingStore from '../../store/useSetting'
+import { useDragSensors } from '../../utils/dndUtils';
+import Card from '../Card/Card';
+import EditorTextModal from '../Modal/EditorTextModal/EditorTextModal';
+import styles from './CardList.module.less';
 
 const defaultTag = 'all';
 
@@ -25,6 +26,7 @@ const CardList: React.FC = () => {
   const { cards, tags, activeTag, reorderCards } = useCardStore();
 
   const sensors = useDragSensors();
+  const { countSort } = useSettingStore();
 
   // 拖拽结束时重新排序
   const handleDragEnd = (event: DragEndEvent) => {
@@ -36,13 +38,21 @@ const CardList: React.FC = () => {
     }
   };
 
-  // 过滤出当前标签的卡片
+  // 过滤出当前标签的卡片并根据设置进行排序
   const currentCards = useMemo(() => {
-    if (activeTag === defaultTag) {
-      return cards;
+    const filterCards = activeTag === defaultTag
+      ? [...cards]
+      : cards.filter(card => card.tags.includes(activeTag));
+
+    // 根据 countSort 决定是按 copyCount 排序还是保持手动排序顺序
+    if (countSort) {
+      // 按照复制次数排序
+      return filterCards.sort((a, b) => (b.copyCount ?? 0) - (a.copyCount ?? 0));
     }
-    return cards.filter(card => card.tags.includes(activeTag));
-  }, [cards, activeTag]);
+
+    // 使用原有顺序（手动排序的结果）
+    return filterCards;
+  }, [cards, activeTag, countSort]);
 
   const [stateEditorTextVisible, setEditorTextVisible] = useState(false)
   const [stateEditorTextId, setEditorTextId] = useState<string>()

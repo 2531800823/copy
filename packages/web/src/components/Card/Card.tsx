@@ -26,7 +26,7 @@ const Card: React.FC<CardProps> = ({
   onHandleEditorText,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const { deleteCard } = useCardStore();
+  const { deleteCard, updateCard } = useCardStore();
 
   const {
     attributes,
@@ -52,6 +52,8 @@ const Card: React.FC<CardProps> = ({
     if (success) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
+      updateCard(card.id, { copyCount: (card.copyCount ?? 0) + 1 });
+      console.log('🚀 liu123 ~ card.copyCount:', card.copyCount)
     }
   };
 
@@ -108,6 +110,6 @@ const Card: React.FC<CardProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default Card;

@@ -17,6 +17,7 @@ export interface Card {
   tags: string[] // 标签ID列表
   /** 暂存 */
   categoryId: string
+  copyCount: number
 }
 
 /**
