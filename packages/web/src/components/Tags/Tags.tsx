@@ -162,7 +162,7 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
         {renderTag('all', '全部', '#1677ff', isDefault)}
 
         {/* 可见的标签：如果需要折叠就部分显示，否则全部显示 */}
-        {(needFolding ? tags.slice(0, visibleTags - 1) : tags).map((item, index) => {
+        {(needFolding ? tags.slice(0, visibleTags - 1) : tags).map((item) => {
           const isSelected = activeTag === item.id;
           const tagColor = item.color || '#1677ff'; // 提供默认颜色
           return renderTag(item.id, item.name, tagColor, isSelected);
