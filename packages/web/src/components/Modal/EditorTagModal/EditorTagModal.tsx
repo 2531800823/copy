@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid'
 import useCardStore from '../../../store/useCardStore'
 import { useDragSensors } from '../../../utils/dndUtils'
 import styles from './styles.module.less'
+import useModalStore from '../../../store/useModal';
 
 interface EditorTagModalProps {
   visible: boolean
@@ -87,11 +88,17 @@ const SortableTag: FC<SortableTagProps> = ({ id, name, color, onEdit, onDelete }
  * 标签管理模态框组件
  */
 const EditorTagModal: FC<EditorTagModalProps> = (props) => {
-  const { visible, onOk, onCancel } = props;
+  const { visible } = props;
+  const { setEditorTagModal } = useModalStore()
   const { tags, updateTag, deleteTag, addTag, reorderTags } = useCardStore();
+
   const [newTagName, setNewTagName] = useState('');
+
   const sensors = useDragSensors();
 
+  const onCancel = () => {
+    setEditorTagModal({ visible: false })
+  }
   /**
    * 生成随机颜色
    * @returns 随机颜色的十六进制值
@@ -190,12 +197,14 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
       reorderTags(active.id.toString(), over.id.toString());
     }
   };
+  if (!visible) return null;
+
 
   return (
     <Modal
       title="管理标签"
       visible={visible}
-      onOk={onOk}
+      onOk={onCancel}
       afterClose={onCancel}
       onCancel={onCancel}
       closeOnEsc={true}

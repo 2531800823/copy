@@ -37,10 +37,11 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
 
     // 获取容器可用宽度
     const containerMaxWidth = maxWidth || tagsContainerRef.current.parentElement?.clientWidth || 0;
+
     if (containerMaxWidth === 0)
       return;
 
-    const otherWidth = window.innerWidth > 500 ? 252 : 50
+    const otherWidth = window.innerWidth > 500 ? 175 : 102
     // 保留给按钮组的最小空间 (50px) 和更多按钮的空间 (40px)
     const availableWidth = containerMaxWidth - otherWidth - 24;
 
@@ -65,12 +66,12 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
     // 宽度不够，计算能显示多少个标签
     // 计算默认"全部"标签的宽度
     const allTagWidth = tagRefs.current[0]?.offsetWidth || 0;
-    let usedWidth = allTagWidth + 6; // 6px是标签间距
+    let usedWidth = 0; // 6px是标签间距
 
     let visibleCount = 1; // 默认至少显示"全部"标签
 
     // 计算能显示多少个标签
-    for (let i = 1; i < tagRefs.current.length; i++) {
+    for (let i = 0; i < tagRefs.current.length; i++) {
       const tagWidth = tagRefs.current[i]?.offsetWidth || 0;
       // 为"更多"按钮预留空间
       if (usedWidth + tagWidth + 6 > availableWidth)
@@ -103,11 +104,10 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
   }, [tagRefs.current.length]);
 
   // 渲染单个标签
-  const renderTag = (id: string, name: string, color: string, isSelected: boolean, index: number) => {
+  const renderTag = (id: string, name: string, color: string, isSelected: boolean) => {
     return (
       <div
         key={id}
-        ref={el => tagRefs.current[index] = el}
         className={classnames(styles.tag, isSelected && styles.selected)}
         style={{
           backgroundColor: isSelected ? color : '#ffffff',
@@ -156,30 +156,54 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
   };
 
   return (
-    <div className={styles.tags} ref={tagsContainerRef}>
-      {/* 全部标签始终显示 */}
-      {renderTag('all', '全部', '#1677ff', isDefault, 0)}
+    <>
+      <div className={styles.tags} ref={tagsContainerRef}>
+        {/* 全部标签始终显示 */}
+        {renderTag('all', '全部', '#1677ff', isDefault)}
 
-      {/* 可见的标签：如果需要折叠就部分显示，否则全部显示 */}
-      {(needFolding ? tags.slice(0, visibleTags - 1) : tags).map((item, index) => {
-        const isSelected = activeTag === item.id;
-        const tagColor = item.color || '#1677ff'; // 提供默认颜色
-        return renderTag(item.id, item.name, tagColor, isSelected, index + 1);
-      })}
+        {/* 可见的标签：如果需要折叠就部分显示，否则全部显示 */}
+        {(needFolding ? tags.slice(0, visibleTags - 1) : tags).map((item, index) => {
+          const isSelected = activeTag === item.id;
+          const tagColor = item.color || '#1677ff'; // 提供默认颜色
+          return renderTag(item.id, item.name, tagColor, isSelected);
+        })}
 
-      {/* 更多标签下拉菜单：只在需要折叠且有标签被隐藏时显示 */}
-      {needFolding && visibleTags < tags.length + 1 && (
-        <Dropdown
-          trigger="click"
-          position="bottomLeft"
-          content={renderDropdownMenu()}
+        {/* 更多标签下拉菜单：只在需要折叠且有标签被隐藏时显示 */}
+        {needFolding && visibleTags < tags.length + 1 && (
+          <Dropdown
+            trigger="click"
+            position="bottomLeft"
+            content={renderDropdownMenu()}
+          >
+            <div className={styles.moreButton}>
+              <IconChevronDown />
+            </div>
+          </Dropdown>
+        )}
+      </div>
+
+      <div style={{ opacity: 0, position: 'absolute', top: -999 }}>
+        <div
+          ref={(ref) => {
+            tagRefs.current[0] = ref;
+          }}
+          className={classnames(styles.tag)}
         >
-          <div className={styles.moreButton}>
-            <IconChevronDown />
+          全部
+        </div>
+        {tags.map((item, index) => {
+          return <div
+            key={item.id}
+            ref={(ref) => {
+              tagRefs.current[index + 1] = ref;
+            }}
+            className={classnames(styles.tag)}
+          >
+            {item.name}
           </div>
-        </Dropdown>
-      )}
-    </div>
+        })}
+      </div>
+    </>
   );
 }
 

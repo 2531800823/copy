@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import useCardStore from '../../../store/useCardStore'
 import styles from './TextModal.module.less'
+import useModalStore from '../../../store/useModal';
 
 interface TextModalModalProps {
   visible: boolean
@@ -13,11 +14,18 @@ interface TextModalModalProps {
 }
 
 const TextModalModal: FC<TextModalModalProps> = (props) => {
-  const { visible, onOk, onCancel } = props;
+  const { visible } = props;
+
+  const {  setTextModal } = useModalStore()
+
   const { tags, addCard } = useCardStore();
+
   const [activeTag, setActiveTag] = useState<string[]>([tags[0].id]);
+
   const [content, setContent] = useState('');
+
   const [title, setTitle] = useState('');
+
   const handleOk = () => {
     addCard({
       id: uuidv4(),
@@ -30,7 +38,7 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
     setTitle('');
     setContent('');
     setActiveTag([tags[0].id]);
-    onOk();
+    setTextModal({ visible: false })
 
   };
 
@@ -43,13 +51,15 @@ const TextModalModal: FC<TextModalModalProps> = (props) => {
     }
   }
 
+  if (!visible) return null;
+
   return (
     <Modal
       title="添加文本"
       visible={visible}
       onOk={handleOk}
-      afterClose={onCancel}
-      onCancel={onCancel}
+      afterClose={() => setTextModal({ visible: false })}
+      onCancel={() => setTextModal({ visible: false })}
       closeOnEsc={true}
       fullScreen
     >

@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100vh;
   background-color: #f8f9fa;
-  padding: 12px 0;
+  padding-top: 12px;
   overflow: hidden;
 }
 
@@ -13,7 +13,7 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 0 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 
   // 确保 tags 组件有足够的空间
   :global(.tags) {
@@ -25,14 +25,14 @@ header {
   .buttonGroup {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 3px;
     flex-shrink: 0;
   }
 }
 
 .main {
   flex: 1;
-  height: calc(100vh - 38px);
+  height: calc(100vh - 54px);
 }
 
 @media screen and (max-width: 500px) {

@@ -4,21 +4,27 @@ import classnames from 'classnames';
 import { useState } from 'react'
 import useCardStore from '../../../store/useCardStore'
 import styles from './EditorTextModal.module.less'
+import useModalStore from '../../../store/useModal';
 
 interface TextModalModalProps {
   id: string
   visible: boolean
-  onOk: () => void
-  onCancel: () => void
 }
 
 const EditorTextModal: FC<TextModalModalProps> = (props) => {
-  const { id, visible, onOk, onCancel } = props;
+  const { id, visible } = props;
+  const { setEditorTextModal } = useModalStore()
 
+  const onOk = () => {
+    setEditorTextModal({ visible: false })
+  }
+
+  const onCancel = () => {
+    setEditorTextModal({ visible: false })
+  }
   const { cards, tags, updateCard } = useCardStore();
 
   const card = cards.find(item => item.id === id)
-  console.log('🚀 liu123 ~ card:', card)
 
   const [activeTag, setActiveTag] = useState<string[]>(card?.tags ?? [tags[0].id]);
 
@@ -48,6 +54,8 @@ const EditorTextModal: FC<TextModalModalProps> = (props) => {
       setActiveTag([...activeTag, id]);
     }
   }
+  if (!visible) return null;
+
 
   return (
     <Modal

@@ -16,6 +16,7 @@ import { useDragSensors } from '../../utils/dndUtils';
 import Card from '../Card/Card';
 import EditorTextModal from '../Modal/EditorTextModal/EditorTextModal';
 import styles from './CardList.module.less';
+import useModalStore from '../../store/useModal';
 
 const defaultTag = 'all';
 
@@ -26,7 +27,10 @@ const CardList: React.FC = () => {
   const { cards, tags, activeTag, reorderCards } = useCardStore();
 
   const sensors = useDragSensors();
+
   const { countSort } = useSettingStore();
+
+  const { setEditorTextModal } = useModalStore()
 
   // 拖拽结束时重新排序
   const handleDragEnd = (event: DragEndEvent) => {
@@ -54,11 +58,8 @@ const CardList: React.FC = () => {
     return filterCards;
   }, [cards, activeTag, countSort]);
 
-  const [stateEditorTextVisible, setEditorTextVisible] = useState(false)
-  const [stateEditorTextId, setEditorTextId] = useState<string>()
   const handleEditorText = (id: string) => {
-    setEditorTextVisible(true)
-    setEditorTextId(id)
+    setEditorTextModal({ visible: true, id })
   }
 
   return (
@@ -83,20 +84,6 @@ const CardList: React.FC = () => {
           ))}
         </SortableContext>
       </DndContext>
-      {stateEditorTextId && (
-        <EditorTextModal
-          id={stateEditorTextId}
-          onCancel={() => {
-            setEditorTextVisible(false)
-            setEditorTextId(undefined);
-          }}
-          onOk={() => {
-            setEditorTextVisible(false);
-            setEditorTextId(undefined);
-          }}
-          visible={stateEditorTextVisible}
-        />
-      )}
     </div>
   );
 };

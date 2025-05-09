@@ -5,6 +5,18 @@
   height: 30px;
   overflow: hidden;
   flex-wrap: nowrap;
+  
+  /* 确保标签组件在不同屏幕尺寸下保持原始大小，不进行缩放 */
+  transform: scale(1);
+  transform-origin: left center;
+  
+  /* 防止在移动设备上被压缩 */
+  flex-shrink: 0;
+  
+  /* 确保在小屏幕上也能正常显示，不被挤压 */
+  @media screen and (max-width: 768px) {
+    min-width: fit-content;
+  }
 
   .tag {
     padding: 2px 6px;

@@ -7,7 +7,8 @@ import useSettingStore, { EnumCountSort } from '../store/useSetting'
 import { clearAllBackups } from '../utils/clean'
 import { handleExportJSON } from '../utils/exportFile'
 import styles from './SettingsPage.module.less'
-
+import { map } from 'lodash-es';
+import { hotKeys } from '../hooks/useHotKeys';
 /**
  * 设置页面组件
  */
@@ -26,7 +27,6 @@ const SettingsPage: React.FC = () => {
         // 获取当前自启动状态
         if (window.autoLaunch) {
           const status = await window.autoLaunch.get();
-          console.log('🚀 liu123 ~ status:', status)
           setAutoLaunch(status);
         }
       }
@@ -81,24 +81,15 @@ const SettingsPage: React.FC = () => {
       </div>
 
       <div className={styles.settingSection}>
-        <h2>常规设置</h2>
+        <h2>查看</h2>
 
         <div className={styles.settingItem}>
-          <label className={styles.settingLabel}>
-            <span>
-              卡片根据复制排序：
-            </span>
-            <div className={styles.switchWrapper}>
-              <input
-                type="checkbox"
-                checked={countSort}
-                onChange={() => setCountSort(!countSort)}
-                disabled={loading}
-                className={styles.switchInput}
-              />
-              <div className={styles.switchSlider}></div>
-            </div>
-          </label>
+          {map(hotKeys, (value, key) => (
+            <label className={styles.settingLabel} key={key}>
+              <span>{key}</span>
+              <span >{value}</span>
+            </label>
+          ))}
         </div>
       </div>
 
@@ -133,8 +124,30 @@ const SettingsPage: React.FC = () => {
             清除备份数据
           </Button>
         </div>
-
       </div>
+
+      <div className={styles.settingSection}>
+        <h2>常规设置</h2>
+
+        <div className={styles.settingItem}>
+          <label className={styles.settingLabel}>
+            <span>
+              卡片根据复制排序：
+            </span>
+            <div className={styles.switchWrapper}>
+              <input
+                type="checkbox"
+                checked={countSort}
+                onChange={() => setCountSort(!countSort)}
+                disabled={loading}
+                className={styles.switchInput}
+              />
+              <div className={styles.switchSlider}></div>
+            </div>
+          </label>
+        </div>
+      </div>
+
 
       <div className={styles.settingSection}>
         <h2>系统设置</h2>
@@ -159,11 +172,6 @@ const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <ImportJsonModal
-        visible={importJsonVisible}
-        onOk={() => { setImportJsonVisible(false); }}
-        onCancel={() => { setImportJsonVisible(false); }}
-      />
 
     </div>
   );

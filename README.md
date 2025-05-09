@@ -1,13 +1,79 @@
-# 导出。。。 放入到 设置中
+# CopyApp
 
-# tag 管理可以排序
+一个基于Electron的现代桌面应用程序，提供便捷的复制粘贴功能。
 
-# 点击添加文本的时候 菜单收起来
+## 功能特点
 
-# 支持批量的添加， json 形式
+- 跨平台支持：Windows, macOS, Linux
+- 便捷的复制粘贴管理
+- 现代化的用户界面
+- 支持快捷键操作
 
-# 滚动条
+## 下载安装
 
-# 每个 card 的高度
+### Windows 用户
 
-# 把样式优化一下，编辑都删除掉，然后添加点击复制的次数，缓存起来，支持排序是点击次数排序和自定义
+1. 前往 [Releases](https://github.com/2531800823/copy/releases) 页面
+2. 下载最新的 `CopyApp-Windows-x.x.x-Setup.exe` 安装文件
+3. 运行安装程序，按照提示完成安装
+4. 从开始菜单或桌面快捷方式启动应用
+
+### macOS 用户
+
+1. 前往 [Releases](https://github.com/2531800823/copy/releases) 页面
+2. 下载最新的 `CopyApp-Mac-x.x.x-Installer.dmg` 安装文件
+3. 打开 DMG 文件，将应用拖到 Applications 文件夹
+4. 从应用程序列表中启动 CopyApp
+
+### Linux 用户
+
+1. 前往 [Releases](https://github.com/2531800823/copy/releases) 页面
+2. 下载最新的 `CopyApp-Linux-x.x.x.AppImage` 文件
+3. 添加执行权限：`chmod +x CopyApp-Linux-x.x.x.AppImage`
+4. 运行应用：`./CopyApp-Linux-x.x.x.AppImage`
+
+## 开发指南
+
+本项目使用 pnpm 作为包管理器，采用 monorepo 结构组织代码。
+
+### 项目结构
+
+```
+/packages
+  /desktop - Electron 桌面应用
+  /web     - Web 前端界面
+  /server  - 后端服务（如果有）
+```
+
+### 本地开发
+
+```bash
+# 安装依赖
+pnpm install
+
+# 启动所有服务
+pnpm start
+
+# 或者单独启动某个服务
+pnpm dev:web     # 启动前端服务
+pnpm dev:desktop # 启动桌面应用
+pnpm dev:server  # 启动后端服务（如果有）
+```
+
+### 构建应用
+
+```bash
+# 构建所有服务
+pnpm build
+
+# 或者单独构建桌面应用
+pnpm build:desktop
+```
+
+## 许可证
+
+[MIT](LICENSE)
+
+## 贡献指南
+
+欢迎提交问题和贡献代码，请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解更多信息。

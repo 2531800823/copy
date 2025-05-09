@@ -6,11 +6,10 @@ import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
 
 import useCardStore from '../../../store/useCardStore';
+import useModalStore from '../../../store/useModal';
 
 interface ImportJsonProps {
-  visible: boolean
-  onOk: () => void
-  onCancel: () => void
+  visible: boolean 
 }
 
 /**
@@ -23,12 +22,25 @@ interface ImportData {
 }
 
 const ImportJsonModal: FC<ImportJsonProps> = (props) => {
-  const { visible, onOk, onCancel } = props;
+  const { visible } = props;
+  
   const { cards, tags, addCard, addTag, importData } = useCardStore();
 
+  const { setImportJsonModal } = useModalStore()
+
   const [jsonContent, setJsonContent] = useState<string>('');
+
   const [importMode, setImportMode] = useState<'append' | 'override'>('append');
+
   const [errorMsg, setErrorMsg] = useState<string>('');
+  
+  const onOk = () => {
+    setImportJsonModal({ visible: false })
+  }
+
+  const onCancel = () => {
+    setImportJsonModal({ visible: false })
+  }
 
   /**
    * 验证导入的JSON格式是否正确
@@ -47,7 +59,7 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
     // 验证数据通过
     setErrorMsg('');
     return true;
-  };
+  }
 
   /**
    * 导出当前数据为备份
@@ -64,7 +76,7 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
     localStorage.setItem(`cards-backup-${timestamp}`, JSON.stringify(backupData));
 
     return timestamp;
-  };
+  }
 
   /**
    * 处理导入逻辑
@@ -159,6 +171,8 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
     }
   };
 
+  if (!visible) return null;
+
   return (
     <Modal
       title="导入JSON数据"
@@ -167,7 +181,7 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
       afterClose={onCancel}
       onCancel={onCancel}
       closeOnEsc={true}
-      width={600}
+      fullScreen
     >
       <div style={{ marginBottom: 16 }}>
         <TextArea
@@ -192,6 +206,6 @@ const ImportJsonModal: FC<ImportJsonProps> = (props) => {
       </div>
     </Modal>
   );
-};
+}
 
 export default ImportJsonModal

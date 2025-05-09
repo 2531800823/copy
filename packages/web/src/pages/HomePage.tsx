@@ -1,22 +1,39 @@
-import { IconEdit, IconGridView, IconMoreStroked, IconPlus, IconSetting } from '@douyinfe/semi-icons'
+import { IconCode, IconEdit, IconGridView, IconMoreStroked, IconPlus, IconSetting } from '@douyinfe/semi-icons'
 import { IconForm } from '@douyinfe/semi-icons-lab'
 import { Button, Dropdown, Tooltip } from '@douyinfe/semi-ui';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'
 import CardList from '../components/CardList/CardList'
 import EditorTagModal from '../components/Modal/EditorTagModal/EditorTagModal' 
-import TextModalModal from '../components/Modal/TextModal/TextModal';
-import { Tags } from '../components/Tags' 
-import styles from './HomePage.module.less'
+import JsonViewerModal from '../components/Modal/JsonViewerModal/JsonViewerModal'
+import TextModalModal from '../components/Modal/TextModal/TextModal' 
+import { Tags } from '../components/Tags';
+import styles from './HomePage.module.less';
+import useCardStore from '../store/useCardStore';
+import useModalStore from '../store/useModal';
 
 /**
  * 主页面组件
  */
 const HomePage: React.FC = () => {
   const [textVisible, setTextVisible] = useState(false);
+
   const [isMobile, setIsMobile] = useState(false);
+
   const [editTagVisible, setEditTagVisible] = useState(false)
+
   const [dropdownVisible, setDropdownVisible] = useState(false);
+ 
+  const [stateTop, setTop] = useState(false)
+
+  const {  setJsonViewerModal, setEditorTagModal,  setTextModal } = useModalStore()
+  
+  const { cards, tags } = useCardStore();
+
+  useEffect(() => {
+    console.log("🚀 liu123 ~ cards:", cards)
+    console.log("🚀 liu123 ~ tags:", tags)
+  },[cards,tags])
 
   // 监听窗口大小变化
   useEffect(() => {
@@ -51,14 +68,14 @@ const HomePage: React.FC = () => {
       <Dropdown.Item
         icon={<IconPlus />}
         type="tertiary"
-        onClick={() => handleMenuItemClick(() => setTextVisible(true))}
+        onClick={() => handleMenuItemClick(() => setTextModal({ visible: true }))}
       >
         添加文本
       </Dropdown.Item>
       <Dropdown.Item
         icon={<IconGridView />}
         type="tertiary"
-        onClick={() => handleMenuItemClick(() => setEditTagVisible(true))}
+        onClick={() => handleMenuItemClick(() => setEditorTagModal({ visible: true }))}
       >
         管理 tag
       </Dropdown.Item>
@@ -80,6 +97,10 @@ const HomePage: React.FC = () => {
   const renderButtonGroup = () => {
     return (
       <>
+        {/* 添加 文本 */}
+        <Tooltip content="打开json编辑器">
+ 
+        </Tooltip>
 
         {/* 添加 文本 */}
         <Tooltip content="添加 文本">
@@ -88,7 +109,7 @@ const HomePage: React.FC = () => {
             theme="borderless"
             type="tertiary"
             aria-label="添加 文本"
-            onClick={() => { setTextVisible(true); }}
+            onClick={() => { setTextModal({ visible: true }) }}
           />
         </Tooltip>
 
@@ -99,7 +120,7 @@ const HomePage: React.FC = () => {
             theme="borderless"
             type="tertiary"
             aria-label="管理 tag"
-            onClick={() => { setEditTagVisible(true); }}
+            onClick={() => { setEditorTagModal({ visible: true }) }}
           />
         </Tooltip>
 
@@ -118,7 +139,6 @@ const HomePage: React.FC = () => {
       </>
     );
   };
-  const [stateTop, setTop] = useState(false)
 
   return (
     <div className={styles.homePage}>
@@ -147,6 +167,13 @@ const HomePage: React.FC = () => {
                 renderButtonGroup()
               )}
 
+<Button
+            icon={<IconCode />}
+            theme="borderless"
+            type="tertiary"
+            aria-label="打开json编辑器"
+            onClick={() => { setJsonViewerModal({ visible: true}); }}
+          />
           <div
             onClick={() => {
               setTop((prev) => {
@@ -174,22 +201,6 @@ const HomePage: React.FC = () => {
       <main className={styles.main}>
         <CardList />
       </main>
-
-      <TextModalModal
-        visible={textVisible}
-        onOk={() => { setTextVisible(false); }}
-        onCancel={() => { setTextVisible(false); }}
-      />
-
-      <EditorTagModal
-        visible={!!editTagVisible}
-        onOk={() => {
-          setEditTagVisible(false)
-        }}
-        onCancel={() => {
-          setEditTagVisible(false)
-        }}
-      />
     </div>
   );
 };
