@@ -21,4 +21,18 @@ button {
   padding: 0 2px;
   border-radius: 2px;
   font-weight: bold;
-} 
+}
+
+
+* {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE 和 Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  // display: none;
+  /* Chrome 和 Safari */
+}

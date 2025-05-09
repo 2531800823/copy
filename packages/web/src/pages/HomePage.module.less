@@ -3,38 +3,36 @@
   flex-direction: column;
   height: 100vh;
   background-color: #f8f9fa;
-  padding: 12px;
+  padding: 12px 0;
+  overflow: hidden;
 }
 
 
-header{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  margin-bottom: 12px;
 
+  // 确保 tags 组件有足够的空间
+  :global(.tags) {
+    flex: 1;
+    overflow: hidden;
+    margin-right: 8px;
+  }
 
-  .buttonGroup{
+  .buttonGroup {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
   }
+}
 
-
-  .tags{
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    max-width: 70%;
-
-    .tag{
-      padding: 4px 8px;
-      background-color: #e0e0e0;
-      border-radius: 16px;
-      font-size: 14px;
-      color: #424242;
-    }
-  }
+.main {
+  flex: 1;
+  height: calc(100vh - 38px);
 }
 
 @media screen and (max-width: 500px) {
@@ -42,6 +40,7 @@ header{
     .tags {
       max-width: calc(100% - 50px);
     }
+
     .buttonGroup {
       min-width: 40px;
     }

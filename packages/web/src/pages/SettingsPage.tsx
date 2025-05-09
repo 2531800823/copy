@@ -1,12 +1,18 @@
 import { Button } from '@douyinfe/semi-ui'
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal'
+import useCardStore from '../store/useCardStore';
+import { clearAllBackups } from '../utils/clean';
+import { handleExportJSON } from '../utils/exportFile';
 import styles from './SettingsPage.module.less';
 
 /**
  * 设置页面组件
  */
 const SettingsPage: React.FC = () => {
+  const { cards, tags } = useCardStore();
+
   // 自启动状态
   const [autoLaunch, setAutoLaunch] = useState(false);
   // 加载状态
@@ -62,6 +68,8 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const [importJsonVisible, setImportJsonVisible] = useState(false);
+
   return (
     <div className={styles.settingsPage}>
       <div className={styles.header}>
@@ -69,6 +77,40 @@ const SettingsPage: React.FC = () => {
         <Link to="/">
           <Button type="primary" size="small">返回首页</Button>
         </Link>
+      </div>
+
+      <div className={styles.settingSection}>
+        <h2>文件操作</h2>
+
+        <div className={styles.settingItem} style={{ display: 'flex', gap: 10 }}>
+          <Button
+            type="primary"
+            onClick={() => {
+              handleExportJSON({
+                cards,
+                tags,
+              })
+            }}
+            className={styles.actionButton}
+          >
+            导出文件
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => { setImportJsonVisible(true); }}
+            className={styles.actionButton}
+          >
+            导入文件
+          </Button>
+          <Button
+            type="danger"
+            onClick={clearAllBackups}
+            className={styles.actionButton}
+          >
+            清除备份数据
+          </Button>
+        </div>
+
       </div>
 
       <div className={styles.settingSection}>
@@ -93,6 +135,13 @@ const SettingsPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      <ImportJsonModal
+        visible={importJsonVisible}
+        onOk={() => { setImportJsonVisible(false); }}
+        onCancel={() => { setImportJsonVisible(false); }}
+      />
+
     </div>
   );
 }

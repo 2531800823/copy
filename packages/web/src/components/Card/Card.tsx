@@ -65,9 +65,6 @@ const Card: React.FC<CardProps> = ({
       {...listeners}
 
     >
-      <div className={styles.dragHandle}>
-        ⠿
-      </div>
 
       <div
         className={styles.content}
@@ -111,6 +108,6 @@ const Card: React.FC<CardProps> = ({
       </div>
     </div>
   );
-}
+};
 
 export default Card;
