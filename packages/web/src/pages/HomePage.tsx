@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 500);
-    }
+    };
 
     // 初始化检查
     checkScreenSize();
@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
     <Dropdown.Menu>
       <Dropdown.Item
         icon={<IconEdit />}
-        onClick={() => { setVisible(true); }}
+        onClick={() => { setEditTagVisible(true); }}
       >
         管理 tag
       </Dropdown.Item>
@@ -118,7 +118,7 @@ const HomePage: React.FC = () => {
         </Tooltip>
       </>
     );
-  }
+  };
   const [stateTop, setTop] = useState(false)
 
   return (
@@ -197,6 +197,6 @@ const HomePage: React.FC = () => {
       />
     </div>
   );
-}
+};
 
 export default HomePage;
