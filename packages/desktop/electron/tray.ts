@@ -1,21 +1,37 @@
+import fs from 'node:fs'
 import path from 'node:path';
-import { app, Menu, nativeImage, Tray } from 'electron';
-import { toAbout } from './about'
-import logger from './logger'
-import { PUBLIC, win } from './main'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url';
+import { app, Menu, nativeImage, Tray } from 'electron'
+import { toAbout } from './about';
+import logger from './logger';
+import { win } from './main';
+import { checkForUpdates } from './update'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
  * 创建系统托盘图标
  */
 // eslint-disable-next-line import/no-mutable-exports
-export let tray: Tray | null = null;
+export let tray: Tray | null = null
+
+function getIconPath() {
+  if (process.env.NODE_ENV === 'development') {
+    logger.info('Tray', `iconPath:`);
+
+    return path.join(__dirname, '../build/icons/png/32x32.png');
+  }
+  return path.join(process.resourcesPath, 'build', 'icons', 'png', '32x32.png');
+}
+
+const iconPath = getIconPath();
+logger.info('Tray', `iconPath: ${iconPath}, exists: ${fs.existsSync(iconPath)}`);
+const icon = nativeImage.createFromPath(iconPath);
+logger.info('Tray', `icon is empty: ${icon.isEmpty()}`);
 
 export function createTray() {
-  logger.info('Tray', '正在创建系统托盘图标');
-
-  // 加载托盘图标
-  const iconPath = path.join(PUBLIC, 'electron-vite.svg');
-  const icon = nativeImage.createFromPath(iconPath);
+  logger.info('Tray', '正在创建系统托盘图标')
 
   tray = new Tray(icon);
   tray.setToolTip('我的应用');
@@ -38,16 +54,22 @@ export function createTray() {
     {
       label: '关于',
       click: () => {
-        toAbout();
+        toAbout()
       },
     },
     {
       label: '显示窗口',
       click: () => {
         if (win) {
-          win.show();
-          win.focus();
+          win.show()
+          win.focus()
         }
+      },
+    },
+    {
+      label: '检查更新',
+      click: () => {
+        checkForUpdates()
       },
     },
 
@@ -55,26 +77,26 @@ export function createTray() {
     {
       label: '退出',
       click: () => {
-        app.quit();
+        app.quit()
       },
     },
-  ]);
+  ])
 
   // 设置托盘菜单
-  tray.setContextMenu(contextMenu);
+  tray.setContextMenu(contextMenu)
 
   // 点击托盘图标时显示窗口
   tray.on('click', () => {
     if (win) {
       if (win.isVisible()) {
-        win.hide();
+        win.hide()
       }
       else {
-        win.show();
-        win.focus();
+        win.show()
+        win.focus()
       }
     }
-  });
+  })
 
-  logger.info('Tray', '系统托盘图标创建完成');
+  logger.info('Tray', '系统托盘图标创建完成')
 }

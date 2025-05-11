@@ -1,17 +1,15 @@
-import type { Tray } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, dialog, Menu, nativeImage, net, protocol } from 'electron'
-import { autoUpdater } from 'electron-updater'
+import { app, BrowserWindow, Menu, protocol } from 'electron'
 import { updateAutoLaunchState } from './autoLaunch';
 import initIpcMain from './ipcMain';
 import logger from './logger';
 import { LogIpcManager } from './logger/ipc';
 import { LogUtils } from './logger/utils';
 import { setupProtocol } from './protocol'
-import { getAutoLaunch, getWindowConfig, saveWindowConfig, setAutoLaunch } from './store'
+import { getWindowConfig, saveWindowConfig } from './store'
 import { createTray, tray } from './tray';
 import { setupAutoUpdater } from './update'
 
@@ -188,7 +186,7 @@ function saveWindowState() {
     // 如果窗口最大化，只保存最大化状态
     if (isMaximized) {
       saveWindowConfig({ isMaximized });
-      return;
+      return
     }
 
     // 获取窗口位置和大小
@@ -337,7 +335,7 @@ function createWindow() {
       logger.info('Window', `url: ${WEB_URL}`)
       win?.loadURL(WEB_URL)
       win.webContents.openDevTools()
-      return;
+      return
     }
 
     // 使用自定义app://协议加载HTML文件，解决资源路径问题
