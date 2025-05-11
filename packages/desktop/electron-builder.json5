@@ -17,6 +17,11 @@
       "from": "../web/dist/",
       "to": "web/dist",
       "filter": ["**/*"]
+    },
+     {
+      "from": "./build/icons/png/32x32.png",
+      "to": "build/icons/png/32x32.png",
+      "filter": ["**/*"]
     }
   ],
   "extraFiles": [
@@ -79,6 +84,5 @@
   ],
   "generateUpdatesFilesForAllChannels": true,
   "asarUnpack": [
-    "build/icons/png/32x32.png"
   ]
 }

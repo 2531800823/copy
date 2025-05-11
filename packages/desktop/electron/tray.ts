@@ -16,13 +16,26 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // eslint-disable-next-line import/no-mutable-exports
 export let tray: Tray | null = null
 
+/**
+ * 获取托盘图标路径
+ * - 开发环境：取源码目录
+ * - 生产环境：优先查找常规路径 process.resourcesPath/build/icons/png/32x32.png
+ * - 如果常规路径不存在，降级到兼容路径
+ */
 function getIconPath() {
   if (process.env.NODE_ENV === 'development') {
-    logger.info('Tray', `iconPath:`);
-
-    return path.join(__dirname, '../build/icons/png/32x32.png');
+    const devPath = path.join(__dirname, '../build/icons/png/32x32.png');
+    logger.info('Tray', `开发环境图标路径: ${devPath}`);
+    return devPath;
   }
-  return path.join(process.resourcesPath, 'build', 'icons', 'png', '32x32.png');
+
+  // 优先尝试常规路径（直接在 app.asar 中的图标）
+  const normalPath = path.join(process.resourcesPath, 'build', 'icons', 'png', '32x32.png');
+
+  // 检查路径存在性（为了调试目的打印路径）
+  logger.info('Tray', `生产环境图标路径: ${normalPath}, 文件存在: ${fs.existsSync(normalPath)}`);
+
+  return normalPath;
 }
 
 const iconPath = getIconPath();

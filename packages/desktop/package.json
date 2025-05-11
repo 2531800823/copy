@@ -1,7 +1,7 @@
 {
   "name": "desktop",
   "type": "module",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "private": true,
   "description": "Electron desktop application",
   "author": "2531800823@qq.com",
