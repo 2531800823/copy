@@ -1,0 +1,27 @@
+{
+  /**
+   * Syncpack 配置
+   * 重要：不自动修复 workspace 依赖，保持 workspace:* 格式
+   */
+  "versionGroups": [
+    {
+      "label": "TypeScript 工具链版本统一",
+      "dependencies": ["typescript", "@types/node"],
+      "policy": "sameRange"
+    },
+    {
+      "label": "构建工具版本统一",
+      "dependencies": ["rimraf", "prettier", "eslint*"],
+      "policy": "sameRange"
+    }
+  ],
+  "semverGroups": [
+    {
+      "label": "排除 workspace 依赖的版本检查",
+      "packages": ["**"],
+      "dependencies": ["@doc/*"],
+      "isIgnored": true
+    }
+  ]
+}
+

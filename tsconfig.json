@@ -1,0 +1,55 @@
+{
+  /**
+   * TypeScript 基础配置
+   * 适用于 monorepo 项目的根配置
+   */
+  "compilerOptions": {
+    /* 语言和环境 */
+    "target": "ES2022", // 编译目标版本
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // 包含的库文件
+    "moduleDetection": "force", // 强制模块检测
+
+    /* 路径映射 - 直接映射到源码 */
+    "baseUrl": ".",
+    "module": "ESNext", // 模块系统
+    "moduleResolution": "bundler", // 模块解析策略（现代打包工具）
+    "paths": {
+      "@doc/base": ["packages/base/src/index.ts"],
+      "@doc/base/*": ["packages/base/src/*"],
+      "@doc/common": ["packages/common/src/index.ts"],
+      "@doc/common/*": ["packages/common/src/*"],
+      "@doc/outliner": ["packages/outliner/src/index.ts"],
+      "@doc/outliner/*": ["packages/outliner/src/*"],
+      "@doc/text-editor": ["packages/text-editor/src/index.ts"],
+      "@doc/text-editor/*": ["packages/text-editor/src/*"]
+    },
+    "allowImportingTsExtensions": true, // 允许导入 .ts 扩展名
+
+    /* 类型检查 */
+    "strict": true, // 启用所有严格类型检查选项
+    "allowUnreachableCode": false, // 不允许不可达代码
+    "allowUnusedLabels": false, // 不允许未使用的标签
+    "exactOptionalPropertyTypes": true, // 精确的可选属性类型
+    "noFallthroughCasesInSwitch": true, // 检查 switch 语句的 fallthrough
+    "noImplicitOverride": true, // 需要显式 override 关键字
+    "noImplicitReturns": true, // 检查函数的所有代码路径都有返回值
+    "noUncheckedIndexedAccess": true, // 检查索引访问的安全性
+    "noUnusedLocals": true, // 检查未使用的局部变量
+    "noUnusedParameters": true, // 检查未使用的参数
+    "noEmit": true, // 不生成输出文件（开发模式）
+
+    "allowSyntheticDefaultImports": true, // 允许合成默认导入
+    "esModuleInterop": true, // ES 模块互操作性
+    "forceConsistentCasingInFileNames": true, // 强制文件名大小写一致
+    /* 互操作性约束 */
+    "isolatedModules": true, // 确保每个文件都可以独立编译
+    "verbatimModuleSyntax": true, // 保持模块语法的原始形式
+
+    /* 完整性 */
+    "skipLibCheck": true // 跳过库文件的类型检查（提升性能）
+  },
+
+  /* 包含和排除 */
+  "include": ["packages/*/src/**/*", "scripts/**/*"],
+  "exclude": ["node_modules", "dist", "build", "**/*.test.ts", "**/*.spec.ts"]
+}
