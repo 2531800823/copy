@@ -50,6 +50,5 @@
   },
 
   /* 包含和排除 */
-  "include": ["packages/*/src/**/*", "scripts/**/*"],
   "exclude": ["node_modules", "dist", "build", "**/*.test.ts", "**/*.spec.ts"]
 }

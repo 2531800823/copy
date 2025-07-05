@@ -7,10 +7,10 @@ export default defineConfig({
   plugins: [
     electron({
       main: {
-        entry: 'electron/main.ts',
+        entry: 'src/main.ts',
       },
       preload: {
-        input: path.join(__dirname, 'electron/preload.ts'),
+        input: path.join(__dirname, 'src/preload.ts'),
       },
     }),
   ],
