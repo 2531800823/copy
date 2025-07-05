@@ -11,7 +11,7 @@
   },
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "chcp 65001 >nul 2>&1 && vite",
     "build": "tsc && vite build && electron-builder",
     "build:dir": "tsc && vite build && electron-builder --dir",
     "build:win": "tsc && vite build && electron-builder --win",
