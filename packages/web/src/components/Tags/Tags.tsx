@@ -1,22 +1,22 @@
-import type { FC } from 'react'
-import { IconChevronDown } from '@douyinfe/semi-icons';
-import { Dropdown } from '@douyinfe/semi-ui';
-import { useDebounceFn } from 'ahooks'
-import classnames from 'classnames'
-import { useEffect, useRef, useState } from 'react'
+import type {FC} from 'react';
+import {IconChevronDown} from '@douyinfe/semi-icons';
+import {Dropdown} from '@douyinfe/semi-ui';
+import {useDebounceFn} from 'ahooks';
+import classnames from 'classnames';
+import {useEffect, useRef, useState} from 'react';
 import useCardStore from '../../store/useCardStore';
 import styles from './Tags.module.less';
 
 interface TagsProps {
-  maxWidth?: number // 允许最大宽度，不传则自动计算
+  maxWidth?: number; // 允许最大宽度，不传则自动计算
 }
 
 /**
  * 标签组件，支持多彩样式和选中状态
  * 当标签过多时自动折叠显示
  */
-const Tags: FC<TagsProps> = ({ maxWidth }) => {
-  const { activeTag, tags, setActiveTag } = useCardStore();
+const Tags: FC<TagsProps> = ({maxWidth}) => {
+  const {activeTag, tags, setActiveTag} = useCardStore();
   const [visibleTags, setVisibleTags] = useState<number>(tags.length);
   const [needFolding, setNeedFolding] = useState<boolean>(false); // 是否需要折叠
   const tagsContainerRef = useRef<HTMLDivElement>(null);
@@ -24,67 +24,68 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
 
   const handleTagClick = (id: string) => {
     setActiveTag(id);
-  }
+  };
 
   const isDefault = activeTag === 'all';
 
   /**
    * 计算可见标签数量
    */
-  const { run: calculateVisibleTags } = useDebounceFn(() => {
-    if (!tagsContainerRef.current)
-      return;
+  const {run: calculateVisibleTags} = useDebounceFn(
+    () => {
+      if (!tagsContainerRef.current) return;
 
-    // 获取容器可用宽度
-    const containerMaxWidth = maxWidth || tagsContainerRef.current.parentElement?.clientWidth || 0;
+      // 获取容器可用宽度
+      const containerMaxWidth =
+        maxWidth || tagsContainerRef.current.parentElement?.clientWidth || 0;
 
-    if (containerMaxWidth === 0)
-      return;
+      if (containerMaxWidth === 0) return;
 
-    const otherWidth = window.innerWidth > 500 ? 175 : 102
-    // 保留给按钮组的最小空间 (50px) 和更多按钮的空间 (40px)
-    const availableWidth = containerMaxWidth - otherWidth - 24;
+      const otherWidth = window.innerWidth > 500 ? 175 : 102;
+      // 保留给按钮组的最小空间 (50px) 和更多按钮的空间 (40px)
+      const availableWidth = containerMaxWidth - otherWidth - 24;
 
-    // 计算所有标签的总宽度
-    let totalTagsWidth = 0;
-    tagRefs.current.forEach((tagRef, index) => {
-      if (tagRef) {
-        totalTagsWidth += tagRef.offsetWidth + (index > 0 ? 6 : 0); // 加上间距
+      // 计算所有标签的总宽度
+      let totalTagsWidth = 0;
+      tagRefs.current.forEach((tagRef, index) => {
+        if (tagRef) {
+          totalTagsWidth += tagRef.offsetWidth + (index > 0 ? 6 : 0); // 加上间距
+        }
+      });
+
+      // 判断是否需要折叠
+      const shouldFold = totalTagsWidth > availableWidth;
+      setNeedFolding(shouldFold);
+
+      if (!shouldFold) {
+        // 宽度足够，显示所有标签
+        setVisibleTags(tags.length + 1); // +1 是因为包含"全部"标签
+        return;
       }
-    });
 
-    // 判断是否需要折叠
-    const shouldFold = totalTagsWidth > availableWidth;
-    setNeedFolding(shouldFold);
+      // 宽度不够，计算能显示多少个标签
+      // 计算默认"全部"标签的宽度
+      const allTagWidth = tagRefs.current[0]?.offsetWidth || 0;
+      let usedWidth = 0; // 6px是标签间距
 
-    if (!shouldFold) {
-      // 宽度足够，显示所有标签
-      setVisibleTags(tags.length + 1); // +1 是因为包含"全部"标签
-      return
+      let visibleCount = 1; // 默认至少显示"全部"标签
+
+      // 计算能显示多少个标签
+      for (let i = 0; i < tagRefs.current.length; i++) {
+        const tagWidth = tagRefs.current[i]?.offsetWidth || 0;
+        // 为"更多"按钮预留空间
+        if (usedWidth + tagWidth + 6 > availableWidth) break;
+
+        usedWidth += tagWidth + 6;
+        visibleCount++;
+      }
+
+      setVisibleTags(visibleCount);
+    },
+    {
+      wait: 100,
     }
-
-    // 宽度不够，计算能显示多少个标签
-    // 计算默认"全部"标签的宽度
-    const allTagWidth = tagRefs.current[0]?.offsetWidth || 0;
-    let usedWidth = 0; // 6px是标签间距
-
-    let visibleCount = 1; // 默认至少显示"全部"标签
-
-    // 计算能显示多少个标签
-    for (let i = 0; i < tagRefs.current.length; i++) {
-      const tagWidth = tagRefs.current[i]?.offsetWidth || 0;
-      // 为"更多"按钮预留空间
-      if (usedWidth + tagWidth + 6 > availableWidth)
-        break;
-
-      usedWidth += tagWidth + 6;
-      visibleCount++
-    }
-
-    setVisibleTags(visibleCount);
-  }, {
-    wait: 100,
-  });
+  );
 
   // 监听窗口大小变化和标签数量变化
   useEffect(() => {
@@ -104,7 +105,12 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
   }, [tagRefs.current.length]);
 
   // 渲染单个标签
-  const renderTag = (id: string, name: string, color: string, isSelected: boolean) => {
+  const renderTag = (
+    id: string,
+    name: string,
+    color: string,
+    isSelected: boolean
+  ) => {
     return (
       <div
         key={id}
@@ -114,8 +120,7 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
           color: isSelected ? '#ffffff' : color,
           borderColor: color,
         }}
-        onClick={() => handleTagClick(id)}
-      >
+        onClick={() => handleTagClick(id)}>
         {name}
       </div>
     );
@@ -123,8 +128,7 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
 
   // 渲染下拉菜单中的标签
   const renderDropdownMenu = () => {
-    if (!needFolding || visibleTags >= tags.length + 1)
-      return null;
+    if (!needFolding || visibleTags >= tags.length + 1) return null;
 
     const hiddenTags = tags.slice(visibleTags - 1);
 
@@ -136,16 +140,14 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
           return (
             <Dropdown.Item
               key={item.id}
-              onClick={() => handleTagClick(item.id)}
-            >
+              onClick={() => handleTagClick(item.id)}>
               <div
                 className={styles.dropdownTag}
                 style={{
                   backgroundColor: isSelected ? tagColor : '#ffffff',
                   color: isSelected ? '#ffffff' : tagColor,
                   borderColor: tagColor,
-                }}
-              >
+                }}>
                 {item.name}
               </div>
             </Dropdown.Item>
@@ -173,8 +175,7 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
           <Dropdown
             trigger="click"
             position="bottomLeft"
-            content={renderDropdownMenu()}
-          >
+            content={renderDropdownMenu()}>
             <div className={styles.moreButton}>
               <IconChevronDown />
             </div>
@@ -182,29 +183,29 @@ const Tags: FC<TagsProps> = ({ maxWidth }) => {
         )}
       </div>
 
-      <div style={{ opacity: 0, position: 'absolute', top: -999 }}>
+      <div style={{opacity: 0, position: 'absolute', top: -999}}>
         <div
           ref={(ref) => {
             tagRefs.current[0] = ref;
           }}
-          className={classnames(styles.tag)}
-        >
+          className={classnames(styles.tag)}>
           全部
         </div>
         {tags.map((item, index) => {
-          return <div
-            key={item.id}
-            ref={(ref) => {
-              tagRefs.current[index + 1] = ref;
-            }}
-            className={classnames(styles.tag)}
-          >
-            {item.name}
-          </div>
+          return (
+            <div
+              key={item.id}
+              ref={(ref) => {
+                tagRefs.current[index + 1] = ref;
+              }}
+              className={classnames(styles.tag)}>
+              {item.name}
+            </div>
+          );
         })}
       </div>
     </>
   );
-}
+};
 
 export default Tags;

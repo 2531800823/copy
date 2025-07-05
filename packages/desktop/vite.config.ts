@@ -1,7 +1,7 @@
-import path from 'node:path'
-import process from 'node:process'
-import { defineConfig } from 'vite'
-import electron from 'vite-plugin-electron/simple'
+import path from 'node:path';
+import process from 'node:process';
+import {defineConfig} from 'vite';
+import electron from 'vite-plugin-electron/simple';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -20,4 +20,4 @@ export default defineConfig({
       external: ['electron'],
     },
   },
-})
+});

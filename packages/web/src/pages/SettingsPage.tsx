@@ -1,19 +1,19 @@
-import { Button } from '@douyinfe/semi-ui'
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal'
+import {Button} from '@douyinfe/semi-ui';
+import React, {useEffect, useState} from 'react';
+import {Link} from 'react-router-dom';
+import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal';
 import useCardStore from '../store/useCardStore';
-import useSettingStore, { EnumCountSort } from '../store/useSetting'
-import { clearAllBackups } from '../utils/clean'
-import { handleExportJSON } from '../utils/exportFile'
-import styles from './SettingsPage.module.less'
-import { map } from 'lodash-es';
-import { hotKeys } from '../hooks/useHotKeys';
+import useSettingStore, {EnumCountSort} from '../store/useSetting';
+import {clearAllBackups} from '../utils/clean';
+import {handleExportJSON} from '../utils/exportFile';
+import styles from './SettingsPage.module.less';
+import {map} from 'lodash-es';
+import {hotKeys} from '../hooks/useHotKeys';
 /**
  * 设置页面组件
  */
 const SettingsPage: React.FC = () => {
-  const { cards, tags } = useCardStore();
+  const {cards, tags} = useCardStore();
 
   // 自启动状态
   const [autoLaunch, setAutoLaunch] = useState(false);
@@ -29,11 +29,9 @@ const SettingsPage: React.FC = () => {
           const status = await window.autoLaunch.get();
           setAutoLaunch(status);
         }
-      }
-      catch (error) {
+      } catch (error) {
         console.error('获取自启动状态失败', error);
-      }
-      finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -44,7 +42,9 @@ const SettingsPage: React.FC = () => {
   /**
    * 切换自启动状态
    */
-  const handleAutoLaunchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAutoLaunchChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const newStatus = e.target.checked;
 
     try {
@@ -55,28 +55,27 @@ const SettingsPage: React.FC = () => {
         if (success) {
           setAutoLaunch(newStatus);
           console.log(`已${newStatus ? '启用' : '禁用'}开机自启动`);
-        }
-        else {
+        } else {
           console.error('设置自启动失败');
         }
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error('设置自启动出错', error);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
 
   const [importJsonVisible, setImportJsonVisible] = useState(false);
-  const { countSort, setCountSort } = useSettingStore();
+  const {countSort, setCountSort} = useSettingStore();
   return (
     <div className={styles.settingsPage}>
       <div className={styles.header}>
         <h1 className={styles.title}>设置</h1>
         <Link to="/">
-          <Button type="primary" size="small">返回首页</Button>
+          <Button type="primary" size="small">
+            返回首页
+          </Button>
         </Link>
       </div>
 
@@ -87,7 +86,7 @@ const SettingsPage: React.FC = () => {
           {map(hotKeys, (value, key) => (
             <label className={styles.settingLabel} key={key}>
               <span>{key}</span>
-              <span >{value}</span>
+              <span>{value}</span>
             </label>
           ))}
         </div>
@@ -96,31 +95,30 @@ const SettingsPage: React.FC = () => {
       <div className={styles.settingSection}>
         <h2>文件操作</h2>
 
-        <div className={styles.settingItem} style={{ display: 'flex', gap: 10 }}>
+        <div className={styles.settingItem} style={{display: 'flex', gap: 10}}>
           <Button
             type="primary"
             onClick={() => {
               handleExportJSON({
                 cards,
                 tags,
-              })
+              });
             }}
-            className={styles.actionButton}
-          >
+            className={styles.actionButton}>
             导出文件
           </Button>
           <Button
             type="primary"
-            onClick={() => { setImportJsonVisible(true); }}
-            className={styles.actionButton}
-          >
+            onClick={() => {
+              setImportJsonVisible(true);
+            }}
+            className={styles.actionButton}>
             导入文件
           </Button>
           <Button
             type="danger"
             onClick={clearAllBackups}
-            className={styles.actionButton}
-          >
+            className={styles.actionButton}>
             清除备份数据
           </Button>
         </div>
@@ -131,9 +129,7 @@ const SettingsPage: React.FC = () => {
 
         <div className={styles.settingItem}>
           <label className={styles.settingLabel}>
-            <span>
-              卡片根据复制排序：
-            </span>
+            <span>卡片根据复制排序：</span>
             <div className={styles.switchWrapper}>
               <input
                 type="checkbox"
@@ -147,7 +143,6 @@ const SettingsPage: React.FC = () => {
           </label>
         </div>
       </div>
-
 
       <div className={styles.settingSection}>
         <h2>系统设置</h2>
@@ -171,8 +166,6 @@ const SettingsPage: React.FC = () => {
           </p>
         </div>
       </div>
-
-
     </div>
   );
 };

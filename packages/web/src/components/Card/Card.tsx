@@ -1,20 +1,20 @@
-import type { Card as CardType, Tag } from '../../types';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { IconDeleteStroked, IconEdit } from '@douyinfe/semi-icons'
-import { IconJsonViewer } from '@douyinfe/semi-icons-lab'
-import { Button, Tooltip } from '@douyinfe/semi-ui';
-import React, { useState } from 'react';
+import type {Card as CardType, Tag} from '../../types';
+import {useSortable} from '@dnd-kit/sortable';
+import {CSS} from '@dnd-kit/utilities';
+import {IconDeleteStroked, IconEdit} from '@douyinfe/semi-icons';
+import {IconJsonViewer} from '@douyinfe/semi-icons-lab';
+import {Button, Tooltip} from '@douyinfe/semi-ui';
+import React, {useState} from 'react';
 import useCardStore from '../../store/useCardStore';
-import { copyToClipboard } from '../../utils/commonUtils'
+import {copyToClipboard} from '../../utils/commonUtils';
 import styles from './Card.module.less';
 
 interface CardProps {
-  card: CardType
-  tags: Tag[]
-  isHighlighted?: boolean
-  searchTerm?: string
-  onHandleEditorText: (id: string) => void
+  card: CardType;
+  tags: Tag[];
+  isHighlighted?: boolean;
+  searchTerm?: string;
+  onHandleEditorText: (id: string) => void;
 }
 
 /**
@@ -26,16 +26,10 @@ const Card: React.FC<CardProps> = ({
   onHandleEditorText,
 }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const { deleteCard, updateCard } = useCardStore();
+  const {deleteCard, updateCard} = useCardStore();
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: card.id });
+  const {attributes, listeners, setNodeRef, transform, transition, isDragging} =
+    useSortable({id: card.id});
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -52,7 +46,7 @@ const Card: React.FC<CardProps> = ({
     if (success) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
-      updateCard(card.id, { copyCount: (card.copyCount ?? 0) + 1 });
+      updateCard(card.id, {copyCount: (card.copyCount ?? 0) + 1});
     }
   };
 
@@ -63,13 +57,10 @@ const Card: React.FC<CardProps> = ({
       className={`${styles.card} ${isHighlighted ? styles.highlighted : ''}`}
       onClick={handleCopy}
       {...attributes}
-      {...listeners}
-
-    >
-
+      {...listeners}>
       <div
         className={styles.content}
-        onMouseDown={e => e.stopPropagation()} // 防止触发拖拽
+        onMouseDown={(e) => e.stopPropagation()} // 防止触发拖拽
       >
         <div className={styles.title}>{card.title}</div>
         <div className={styles.content}>{card.content}</div>
@@ -78,7 +69,7 @@ const Card: React.FC<CardProps> = ({
 
       <div
         className={styles.actions}
-        onMouseDown={e => e.stopPropagation()} // 防止按钮区域触发拖拽
+        onMouseDown={(e) => e.stopPropagation()} // 防止按钮区域触发拖拽
       >
         <Button
           icon={<IconEdit />}
@@ -87,7 +78,7 @@ const Card: React.FC<CardProps> = ({
           type="tertiary"
           aria-label="更改内容"
           onClick={(e) => {
-            onHandleEditorText(card.id)
+            onHandleEditorText(card.id);
             e.stopPropagation();
           }}
         />
@@ -103,10 +94,9 @@ const Card: React.FC<CardProps> = ({
             deleteCard(card.id);
           }}
         />
-
       </div>
     </div>
   );
-}
+};
 
 export default Card;

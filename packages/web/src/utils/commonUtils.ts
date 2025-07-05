@@ -9,12 +9,12 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
     return true;
   } catch (err) {
     console.error('复制失败:', err);
-    
+
     // 兼容性方案
     try {
       const textArea = document.createElement('textarea');
       textArea.value = text;
-      
+
       // 确保不可见
       textArea.style.position = 'fixed';
       textArea.style.top = '0';
@@ -26,11 +26,11 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
       textArea.style.outline = 'none';
       textArea.style.boxShadow = 'none';
       textArea.style.background = 'transparent';
-      
+
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      
+
       const success = document.execCommand('copy');
       document.body.removeChild(textArea);
       return success;
@@ -60,15 +60,15 @@ export const debounce = <T extends (...args: any[]) => any>(
   delay: number
 ): ((...args: Parameters<T>) => void) => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  
+
   return (...args: Parameters<T>) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-    
+
     timeoutId = setTimeout(() => {
       fn(...args);
       timeoutId = null;
     }, delay);
   };
-}; 
+};

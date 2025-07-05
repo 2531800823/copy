@@ -2,25 +2,25 @@
  * 应用配置管理模块
  * 用于存储用户配置，如窗口大小、位置等
  */
-import path from 'node:path'
-import { app } from 'electron'
-import Store from 'electron-store'
-import logger from './logger'
+import path from 'node:path';
+import {app} from 'electron';
+import Store from 'electron-store';
+import logger from './logger';
 
 /**
  * 窗口配置类型定义
  */
 interface WindowConfig {
   /** 窗口宽度 */
-  width?: number
+  width?: number;
   /** 窗口高度 */
-  height?: number
+  height?: number;
   /** 窗口x坐标 */
-  x?: number
+  x?: number;
   /** 窗口y坐标 */
-  y?: number
+  y?: number;
   /** 是否最大化 */
-  isMaximized?: boolean
+  isMaximized?: boolean;
 }
 
 /**
@@ -28,9 +28,9 @@ interface WindowConfig {
  */
 interface AppConfig {
   /** 窗口配置 */
-  window?: WindowConfig
+  window?: WindowConfig;
   /** 自动启动配置 */
-  autoLaunch?: boolean
+  autoLaunch?: boolean;
 }
 
 /**
@@ -47,7 +47,7 @@ const store = new Store<AppConfig>({
     },
     autoLaunch: true, // 默认自动启动
   },
-})
+});
 
 /**
  * 获取窗口配置
@@ -55,11 +55,10 @@ const store = new Store<AppConfig>({
  */
 export function getWindowConfig(): WindowConfig {
   try {
-    return store.get('window') || {}
-  }
-  catch (error) {
-    logger.error('Store', '获取窗口配置失败', error)
-    return {} // 返回空对象作为默认值
+    return store.get('window') || {};
+  } catch (error) {
+    logger.error('Store', '获取窗口配置失败', error);
+    return {}; // 返回空对象作为默认值
   }
 }
 
@@ -69,11 +68,10 @@ export function getWindowConfig(): WindowConfig {
  */
 export function saveWindowConfig(config: WindowConfig): void {
   try {
-    store.set('window', config)
-    logger.debug('Store', '保存窗口配置成功', config)
-  }
-  catch (error) {
-    logger.error('Store', '保存窗口配置失败', error)
+    store.set('window', config);
+    logger.debug('Store', '保存窗口配置成功', config);
+  } catch (error) {
+    logger.error('Store', '保存窗口配置失败', error);
   }
 }
 
@@ -83,11 +81,10 @@ export function saveWindowConfig(config: WindowConfig): void {
  */
 export function getAutoLaunch(): boolean {
   try {
-    return store.get('autoLaunch') || true
-  }
-  catch (error) {
-    logger.error('Store', '获取自动启动配置失败', error)
-    return true
+    return store.get('autoLaunch') || true;
+  } catch (error) {
+    logger.error('Store', '获取自动启动配置失败', error);
+    return true;
   }
 }
 
@@ -97,15 +94,14 @@ export function getAutoLaunch(): boolean {
  */
 export function setAutoLaunch(enable: boolean): void {
   try {
-    store.set('autoLaunch', enable)
-    logger.debug('Store', `设置自动启动: ${enable}`)
-  }
-  catch (error) {
-    logger.error('Store', '设置自动启动配置失败', error)
+    store.set('autoLaunch', enable);
+    logger.debug('Store', `设置自动启动: ${enable}`);
+  } catch (error) {
+    logger.error('Store', '设置自动启动配置失败', error);
   }
 }
 
 /**
  * 导出存储实例，以便其他模块可以直接使用
  */
-export default store 
+export default store;

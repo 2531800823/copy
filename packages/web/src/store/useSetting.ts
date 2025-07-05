@@ -1,15 +1,15 @@
-import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware';
+import {create} from 'zustand';
+import {createJSONStorage, persist} from 'zustand/middleware';
 
 export enum EnumCountSort {
   ASC = 'asc',
   DESC = 'desc',
 }
 interface SettingState {
-  countSort: boolean
+  countSort: boolean;
 
   // 卡片操作
-  setCountSort: (countSort: boolean) => void
+  setCountSort: (countSort: boolean) => void;
 }
 
 /**
@@ -17,17 +17,16 @@ interface SettingState {
  */
 const useSettingStore = create<SettingState>()(
   persist(
-    set => ({
+    (set) => ({
       countSort: true,
       // 卡片操作
-      setCountSort: (countSort: boolean) => set({ countSort }),
+      setCountSort: (countSort: boolean) => set({countSort}),
     }),
     {
       name: 'setting-store',
       storage: createJSONStorage(() => localStorage),
-
-    },
-  ),
+    }
+  )
 );
 
-export default useSettingStore
+export default useSettingStore;

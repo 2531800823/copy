@@ -1,32 +1,34 @@
-import type { FC } from 'react';
-import { Input, Modal, TextArea } from '@douyinfe/semi-ui'
+import type {FC} from 'react';
+import {Input, Modal, TextArea} from '@douyinfe/semi-ui';
 import classnames from 'classnames';
-import { useState } from 'react'
-import useCardStore from '../../../store/useCardStore'
-import styles from './EditorTextModal.module.less'
+import {useState} from 'react';
+import useCardStore from '../../../store/useCardStore';
+import styles from './EditorTextModal.module.less';
 import useModalStore from '../../../store/useModal';
 
 interface TextModalModalProps {
-  id: string
-  visible: boolean
+  id: string;
+  visible: boolean;
 }
 
 const EditorTextModal: FC<TextModalModalProps> = (props) => {
-  const { id, visible } = props;
-  const { setEditorTextModal } = useModalStore()
+  const {id, visible} = props;
+  const {setEditorTextModal} = useModalStore();
 
   const onOk = () => {
-    setEditorTextModal({ visible: false })
-  }
+    setEditorTextModal({visible: false});
+  };
 
   const onCancel = () => {
-    setEditorTextModal({ visible: false })
-  }
-  const { cards, tags, updateCard } = useCardStore();
+    setEditorTextModal({visible: false});
+  };
+  const {cards, tags, updateCard} = useCardStore();
 
-  const card = cards.find(item => item.id === id)
+  const card = cards.find((item) => item.id === id);
 
-  const [activeTag, setActiveTag] = useState<string[]>(card?.tags ?? [tags[0].id]);
+  const [activeTag, setActiveTag] = useState<string[]>(
+    card?.tags ?? [tags[0].id]
+  );
 
   const [content, setContent] = useState(card?.content ?? '');
 
@@ -38,24 +40,21 @@ const EditorTextModal: FC<TextModalModalProps> = (props) => {
       title,
       tags: activeTag,
       categoryId: 'text',
-    })
+    });
     setTitle('');
     setContent('');
     setActiveTag([tags[0].id]);
     onOk();
-
   };
 
   const handleTagClick = (id: string) => {
     if (activeTag.includes(id)) {
-      setActiveTag(activeTag.filter(tag => tag !== id));
-    }
-    else {
+      setActiveTag(activeTag.filter((tag) => tag !== id));
+    } else {
       setActiveTag([...activeTag, id]);
     }
-  }
+  };
   if (!visible) return null;
-
 
   return (
     <Modal
@@ -65,10 +64,15 @@ const EditorTextModal: FC<TextModalModalProps> = (props) => {
       afterClose={onCancel}
       onCancel={onCancel}
       closeOnEsc={true}
-      fullScreen
-    >
+      fullScreen>
       <Input placeholder="请输入标题" value={title} onChange={setTitle} />
-      <TextArea placeholder="请输入文本" style={{ marginTop: 12 }} autosize value={content} onChange={setContent} />
+      <TextArea
+        placeholder="请输入文本"
+        style={{marginTop: 12}}
+        autosize
+        value={content}
+        onChange={setContent}
+      />
       <div className={styles.tags}>
         {tags.map((item) => {
           const isSelected = activeTag.includes(item.id);
@@ -82,15 +86,14 @@ const EditorTextModal: FC<TextModalModalProps> = (props) => {
                 color: isSelected ? '#ffffff' : item.color,
                 borderColor: item.color,
               }}
-              onClick={() => handleTagClick(item.id)}
-            >
+              onClick={() => handleTagClick(item.id)}>
               {item.name}
             </div>
-          )
+          );
         })}
       </div>
     </Modal>
   );
-}
+};
 
-export default EditorTextModal
+export default EditorTextModal;

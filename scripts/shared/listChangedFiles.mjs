@@ -1,5 +1,5 @@
-import { execFileSync } from 'node:child_process'
-import process from 'node:process'
+import {execFileSync} from 'node:child_process';
+import process from 'node:process';
 
 /**
  * 执行命令行工具
@@ -8,14 +8,14 @@ import process from 'node:process'
  * @returns {string} 命令输出结果
  */
 function exec(command, args) {
-  console.log(`> ${[command].concat(args).join(' ')}`)
+  console.log(`> ${[command].concat(args).join(' ')}`);
   const options = {
     cwd: process.cwd(),
     env: process.env,
     stdio: 'pipe',
     encoding: 'utf-8',
-  }
-  return execFileSync(command, args, options)
+  };
+  return execFileSync(command, args, options);
 }
 
 /**
@@ -24,8 +24,8 @@ function exec(command, args) {
  * @returns {string[]} 命令输出的行数组
  */
 function execGitCmd(args) {
-  const result = exec('git', args).trim().toString()
-  return result ? result.split('\n') : []
+  const result = exec('git', args).trim().toString();
+  return result ? result.split('\n') : [];
 }
 
 /**
@@ -41,7 +41,7 @@ function listChangedFiles() {
     ...execGitCmd(['diff', '--name-only']),
     // 获取未跟踪的文件（新文件，未被git管理）
     ...execGitCmd(['ls-files', '--others', '--exclude-standard']),
-  ])
+  ]);
 }
 
-export default listChangedFiles
+export default listChangedFiles;

@@ -1,6 +1,6 @@
-import type { Configuration } from 'log4js'
-import path from 'node:path'
-import { app } from 'electron'
+import type {Configuration} from 'log4js';
+import path from 'node:path';
+import {app} from 'electron';
 
 /**
  * 获取日志文件保存路径
@@ -8,16 +8,16 @@ import { app } from 'electron'
  */
 export function getLogPath(): string {
   // 获取用户数据目录
-  const userDataPath = app.getPath('userData')
-  return path.join(userDataPath, 'logs')
+  const userDataPath = app.getPath('userData');
+  return path.join(userDataPath, 'logs');
 }
 
 /**
  * 日志配置
  */
 export function getLogConfig(): Configuration {
-  const logPath = getLogPath()
-  console.log('🚀 liu123 ~ logPath:', logPath)
+  const logPath = getLogPath();
+  console.log('🚀 liu123 ~ logPath:', logPath);
 
   return {
     appenders: {
@@ -80,5 +80,5 @@ export function getLogConfig(): Configuration {
         level: 'debug',
       },
     },
-  }
+  };
 }

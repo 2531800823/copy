@@ -1,43 +1,47 @@
-import type { DragEndEvent } from '@dnd-kit/core';
-import type { FC } from 'react';
-import { closestCenter, DndContext } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { IconDeleteStroked, IconEdit, IconPlus } from '@douyinfe/semi-icons';
-import { Button, Input, Modal, Toast } from '@douyinfe/semi-ui';
-import { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid'
-import useCardStore from '../../../store/useCardStore'
-import { useDragSensors } from '../../../utils/dndUtils'
-import styles from './styles.module.less'
+import type {DragEndEvent} from '@dnd-kit/core';
+import type {FC} from 'react';
+import {closestCenter, DndContext} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {CSS} from '@dnd-kit/utilities';
+import {IconDeleteStroked, IconEdit, IconPlus} from '@douyinfe/semi-icons';
+import {Button, Input, Modal, Toast} from '@douyinfe/semi-ui';
+import {useState} from 'react';
+import {v4 as uuidv4} from 'uuid';
+import useCardStore from '../../../store/useCardStore';
+import {useDragSensors} from '../../../utils/dndUtils';
+import styles from './styles.module.less';
 import useModalStore from '../../../store/useModal';
 
 interface EditorTagModalProps {
-  visible: boolean
-  onOk: () => void
-  onCancel: () => void
+  visible: boolean;
+  onOk: () => void;
+  onCancel: () => void;
 }
 
 /**
  * 可排序的单个标签组件
  */
 interface SortableTagProps {
-  id: string
-  name: string
-  color: string
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
+  id: string;
+  name: string;
+  color: string;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const SortableTag: FC<SortableTagProps> = ({ id, name, color, onEdit, onDelete }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
+const SortableTag: FC<SortableTagProps> = ({
+  id,
+  name,
+  color,
+  onEdit,
+  onDelete,
+}) => {
+  const {attributes, listeners, setNodeRef, transform, transition, isDragging} =
+    useSortable({id});
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -51,12 +55,11 @@ const SortableTag: FC<SortableTagProps> = ({ id, name, color, onEdit, onDelete }
       style={style}
       className={styles.tagItem}
       {...attributes}
-      {...listeners}
-    >
+      {...listeners}>
       <div className={styles.tagInfo}>
         <div
           className={styles.colorIndicator}
-          style={{ backgroundColor: color || '#1677ff' }}
+          style={{backgroundColor: color || '#1677ff'}}
         />
         <span className={styles.tagName}>{name}</span>
       </div>
@@ -82,23 +85,23 @@ const SortableTag: FC<SortableTagProps> = ({ id, name, color, onEdit, onDelete }
       </div>
     </div>
   );
-}
+};
 
 /**
  * 标签管理模态框组件
  */
 const EditorTagModal: FC<EditorTagModalProps> = (props) => {
-  const { visible } = props;
-  const { setEditorTagModal } = useModalStore()
-  const { tags, updateTag, deleteTag, addTag, reorderTags } = useCardStore();
+  const {visible} = props;
+  const {setEditorTagModal} = useModalStore();
+  const {tags, updateTag, deleteTag, addTag, reorderTags} = useCardStore();
 
   const [newTagName, setNewTagName] = useState('');
 
   const sensors = useDragSensors();
 
   const onCancel = () => {
-    setEditorTagModal({ visible: false })
-  }
+    setEditorTagModal({visible: false});
+  };
   /**
    * 生成随机颜色
    * @returns 随机颜色的十六进制值
@@ -113,7 +116,7 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
       '#eb2f96',
       '#13c2c2',
       '#fadb14',
-    ]
+    ];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
@@ -127,7 +130,7 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
     }
 
     // 检查标签名是否重复
-    if (tags.some(tag => tag.name === newTagName.trim())) {
+    if (tags.some((tag) => tag.name === newTagName.trim())) {
       Toast.warning('标签名称已存在');
       return;
     }
@@ -146,9 +149,8 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
    * @param id 标签ID
    */
   const handleEditTag = (id: string) => {
-    const tag = tags.find(tag => tag.id === id);
-    if (!tag)
-      return;
+    const tag = tags.find((tag) => tag.id === id);
+    if (!tag) return;
 
     let name = tag.name;
 
@@ -157,7 +159,7 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
       content: (
         <Input
           defaultValue={tag.name}
-          onChange={value => name = value}
+          onChange={(value) => (name = value)}
           placeholder="请输入新的标签名称"
         />
       ),
@@ -190,7 +192,7 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
    * @param event 拖拽结束事件
    */
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+    const {active, over} = event;
 
     if (over && active.id !== over.id) {
       // 调用 store 中的 reorderTags 方法重新排序标签
@@ -198,7 +200,6 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
     }
   };
   if (!visible) return null;
-
 
   return (
     <Modal
@@ -208,8 +209,7 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
       afterClose={onCancel}
       onCancel={onCancel}
       closeOnEsc={true}
-      fullScreen
-    >
+      fullScreen>
       <div className={styles.container}>
         <div className={styles.addTagSection}>
           <Input
@@ -218,44 +218,36 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
             onChange={setNewTagName}
             onEnterPress={handleAddTag}
           />
-          <Button
-            type="primary"
-            icon={<IconPlus />}
-            onClick={handleAddTag}
-          >
+          <Button type="primary" icon={<IconPlus />} onClick={handleAddTag}>
             添加标签
           </Button>
         </div>
 
-        {tags.length > 0
-          ? (
-              <div className={styles.tagList}>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={tags.map(tag => tag.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {tags.map(tag => (
-                      <SortableTag
-                        key={tag.id}
-                        id={tag.id}
-                        name={tag.name}
-                        color={tag.color || '#1677ff'}
-                        onEdit={handleEditTag}
-                        onDelete={handleDeleteTag}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              </div>
-            )
-          : (
-              <div className={styles.emptyState}>暂无标签，请添加</div>
-            )}
+        {tags.length > 0 ? (
+          <div className={styles.tagList}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={tags.map((tag) => tag.id)}
+                strategy={verticalListSortingStrategy}>
+                {tags.map((tag) => (
+                  <SortableTag
+                    key={tag.id}
+                    id={tag.id}
+                    name={tag.name}
+                    color={tag.color || '#1677ff'}
+                    onEdit={handleEditTag}
+                    onDelete={handleDeleteTag}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
+        ) : (
+          <div className={styles.emptyState}>暂无标签，请添加</div>
+        )}
 
         {tags.length === 1 && (
           <div className={styles.singleTagWarning}>至少需要保留一个标签</div>
@@ -263,6 +255,6 @@ const EditorTagModal: FC<EditorTagModalProps> = (props) => {
       </div>
     </Modal>
   );
-}
+};
 
 export default EditorTagModal;

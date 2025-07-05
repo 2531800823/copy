@@ -20,6 +20,6 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "references": [{ "path": "./tsconfig.node.json" }],
+  "references": [{"path": "./tsconfig.node.json"}],
   "include": ["electron"]
 }

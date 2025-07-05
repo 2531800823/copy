@@ -1,7 +1,7 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import { configure, getLogger } from 'log4js'
-import { getLogConfig, getLogPath } from './config'
+import fs from 'node:fs';
+import path from 'node:path';
+import {configure, getLogger} from 'log4js';
+import {getLogConfig, getLogPath} from './config';
 
 /**
  * 日志级别
@@ -20,31 +20,30 @@ export enum LogLevel {
  * 提供日志记录的统一接口
  */
 class Logger {
-  private initialized = false
+  private initialized = false;
 
   /**
    * 初始化日志系统
    */
   public init(): void {
     if (this.initialized) {
-      return
+      return;
     }
 
     try {
       // 确保日志目录存在
-      const logPath = getLogPath()
+      const logPath = getLogPath();
       if (!fs.existsSync(logPath)) {
-        fs.mkdirSync(logPath, { recursive: true })
+        fs.mkdirSync(logPath, {recursive: true});
       }
 
       // 配置log4js
-      configure(getLogConfig())
-      this.initialized = true
+      configure(getLogConfig());
+      this.initialized = true;
 
-      this.info('Logger', '日志系统初始化成功')
-    }
-    catch (error) {
-      console.error('日志系统初始化失败:', error)
+      this.info('Logger', '日志系统初始化成功');
+    } catch (error) {
+      console.error('日志系统初始化失败:', error);
     }
   }
 
@@ -55,9 +54,9 @@ class Logger {
    */
   public getLogger(category = 'default') {
     if (!this.initialized) {
-      this.init()
+      this.init();
     }
-    return getLogger(category)
+    return getLogger(category);
   }
 
   /**
@@ -67,7 +66,7 @@ class Logger {
    * @param data 附加数据
    */
   public trace(category: string, message: string, ...data: any[]): void {
-    this.log(LogLevel.TRACE, category, message, ...data)
+    this.log(LogLevel.TRACE, category, message, ...data);
   }
 
   /**
@@ -77,7 +76,7 @@ class Logger {
    * @param data 附加数据
    */
   public debug(category: string, message: string, ...data: any[]): void {
-    this.log(LogLevel.DEBUG, category, message, ...data)
+    this.log(LogLevel.DEBUG, category, message, ...data);
   }
 
   /**
@@ -87,7 +86,7 @@ class Logger {
    * @param data 附加数据
    */
   public info(category: string, message: string, ...data: any[]): void {
-    this.log(LogLevel.INFO, category, message, ...data)
+    this.log(LogLevel.INFO, category, message, ...data);
   }
 
   /**
@@ -97,7 +96,7 @@ class Logger {
    * @param data 附加数据
    */
   public warn(category: string, message: string, ...data: any[]): void {
-    this.log(LogLevel.WARN, category, message, ...data)
+    this.log(LogLevel.WARN, category, message, ...data);
   }
 
   /**
@@ -107,7 +106,7 @@ class Logger {
    * @param data 附加数据
    */
   public error(category: string, message: string, ...data: any[]): void {
-    this.log(LogLevel.ERROR, category, message, ...data)
+    this.log(LogLevel.ERROR, category, message, ...data);
   }
 
   /**
@@ -117,7 +116,7 @@ class Logger {
    * @param data 附加数据
    */
   public fatal(category: string, message: string, ...data: any[]): void {
-    this.log(LogLevel.FATAL, category, message, ...data)
+    this.log(LogLevel.FATAL, category, message, ...data);
   }
 
   /**
@@ -127,42 +126,46 @@ class Logger {
    * @param message 日志消息
    * @param data 附加数据
    */
-  private log(level: LogLevel, category: string, message: string, ...data: any[]): void {
+  private log(
+    level: LogLevel,
+    category: string,
+    message: string,
+    ...data: any[]
+  ): void {
     try {
-      const logger = this.getLogger(category)
+      const logger = this.getLogger(category);
 
       // 根据日志级别选择对应的方法
       switch (level) {
         case LogLevel.TRACE:
-          logger.trace(message, ...data)
-          break
+          logger.trace(message, ...data);
+          break;
         case LogLevel.DEBUG:
-          logger.debug(message, ...data)
-          break
+          logger.debug(message, ...data);
+          break;
         case LogLevel.INFO:
-          logger.info(message, ...data)
-          break
+          logger.info(message, ...data);
+          break;
         case LogLevel.WARN:
-          logger.warn(message, ...data)
-          break
+          logger.warn(message, ...data);
+          break;
         case LogLevel.ERROR:
-          logger.error(message, ...data)
-          break
+          logger.error(message, ...data);
+          break;
         case LogLevel.FATAL:
-          logger.fatal(message, ...data)
-          break
+          logger.fatal(message, ...data);
+          break;
         default:
-          logger.info(message, ...data)
+          logger.info(message, ...data);
       }
-    }
-    catch (error) {
-      console.error(`日志记录失败 [${level}] ${category} - ${message}:`, error)
+    } catch (error) {
+      console.error(`日志记录失败 [${level}] ${category} - ${message}:`, error);
     }
   }
 }
 
 // 导出单例
-export const logger = new Logger()
+export const logger = new Logger();
 
 // 默认导出
-export default logger
+export default logger;

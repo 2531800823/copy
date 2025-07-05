@@ -1,8 +1,8 @@
 import React from 'react';
-import { createHashRouter } from 'react-router-dom';
-import AboutPage from '../pages/AboutPage'
-import HomePage from '../pages/HomePage'
-import SettingsPage from '../pages/SettingsPage'
+import {createHashRouter} from 'react-router-dom';
+import AboutPage from '../pages/AboutPage';
+import HomePage from '../pages/HomePage';
+import SettingsPage from '../pages/SettingsPage';
 
 /**
  * 路由配置定义
@@ -21,5 +21,5 @@ const router = createHashRouter([
     path: '/settings',
     element: <SettingsPage />,
   },
-])
+]);
 export default router;
