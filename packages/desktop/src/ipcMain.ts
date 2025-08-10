@@ -1,9 +1,9 @@
 import type {BrowserWindow} from 'electron';
 import {app, ipcMain} from 'electron';
 import {autoUpdater} from 'electron-updater';
-import {getAppAutoLaunch, setAppAutoLaunch} from './autoLaunch';
-import logger from './logger';
-import {getWindowConfig, saveWindowConfig} from './store';
+import {getWindowConfig, saveWindowConfig} from './services/store';
+import logger from './services/LoggerService';
+import { getAppAutoLaunch, setAppAutoLaunch } from './autoLaunch';
 
 export const IpcChannel = {
   /** 窗口置顶 */

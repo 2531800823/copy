@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {app, protocol} from 'electron';
-import logger from './logger';
-import {isDev, RENDERER_DIST} from './main';
+import {createLogger} from './services/LoggerService';
+import {RENDERER_DIST} from './main';
+
+const logger = createLogger('protocol');
 
 /**
  * 设置自定义协议，解决静态资源加载问题

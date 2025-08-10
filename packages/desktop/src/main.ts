@@ -5,15 +5,12 @@ import {fileURLToPath} from 'node:url';
 import {app, BrowserWindow, Menu, protocol} from 'electron';
 import {updateAutoLaunchState} from './autoLaunch';
 import initIpcMain from './ipcMain';
-import logger from './logger';
-import {LogIpcManager} from './logger/ipc';
-import {LogUtils} from './logger/utils';
-import {setupProtocol} from './protocol';
-import {getWindowConfig, saveWindowConfig} from './store';
-import {createTray, tray} from './tray';
-import {setupAutoUpdater} from './update';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import {setupProtocol} from './protocol';
+import {getWindowConfig, saveWindowConfig} from './services/store';
+import {setupAutoUpdater} from './update';
+import logger from './services/LoggerService';
+import TrayService from './services/TrayService';
 
 // The built directory structure
 //
@@ -24,17 +21,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // │ │ ├── main.js
 // │ │ └── preload.mjs
 // │
-process.env.DIST_ELECTRON = path.join(__dirname, '../');
-process.env.DIST = path.join(process.env.DIST_ELECTRON, '../dist-electron');
-export const DIST_ELECTRON = path.join(__dirname, '../');
-
-export const PUBLIC = path.join(DIST_ELECTRON, '../public');
-
-/**
- * 判断是否为开发环境
- */
-export const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-console.log('[DEBUG] isDev:', isDev);
 
 /**
  * 获取最可能的渲染进程路径
@@ -158,18 +144,6 @@ protocol.registerSchemesAsPrivileged([
  * 应用初始化
  */
 function initApp() {
-  // 初始化日志系统
-  logger.init();
-
-  // 设置未捕获异常处理
-  LogUtils.setupUncaughtExceptionHandler();
-
-  // 设置IPC日志处理
-  LogIpcManager.setup();
-
-  // 记录应用启动信息
-  LogUtils.logAppStartup();
-
   // 配置自动更新
   setupAutoUpdater();
 
@@ -253,7 +227,7 @@ function createWindow() {
   Menu.setApplicationMenu(null);
 
   // 创建系统托盘
-  createTray();
+  const trayService = new TrayService();
 
   // 监听窗口大小和位置变化
   win.on('resize', () => {
@@ -407,8 +381,4 @@ app.on('before-quit', () => {
   logger.info('App', '应用即将退出');
   // 保存窗口状态
   saveWindowState();
-  // 销毁托盘图标
-  if (tray) {
-    tray.destroy();
-  }
 });

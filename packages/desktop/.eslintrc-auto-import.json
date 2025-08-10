@@ -1,0 +1,11 @@
+{
+  "globals": {
+    "__dirname": true,
+    "appName": true,
+    "appUserData": true,
+    "dataPath": true,
+    "getLogConfig": true,
+    "getLogPath": true,
+    "isDev": true
+  }
+}

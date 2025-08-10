@@ -25,5 +25,6 @@
     "skipLibCheck": true
   },
   "references": [{ "path": "./tsconfig.node.json" }],
-  "include": ["electron"]
+  "include": ["electron", "src/**/*", "src/types/auto-imports.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

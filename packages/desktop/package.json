@@ -26,6 +26,7 @@
   "dependencies": {
     "electron-store": "10.0.1",
     "electron-updater": "6.1.7",
+    "fs-extra": "^11.3.1",
     "log4js": "6.9.1"
   },
   "devDependencies": {

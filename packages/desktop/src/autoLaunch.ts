@@ -1,8 +1,10 @@
 import path from 'node:path';
 import process from 'node:process';
 import {app} from 'electron';
-import logger from './logger';
-import {getAutoLaunch, setAutoLaunch} from './store';
+import {getAutoLaunch, setAutoLaunch} from './services/store';
+import {createLogger} from './services/LoggerService';
+
+const logger = createLogger('autoLaunch');
 
 /**
  * 设置应用自启动状态

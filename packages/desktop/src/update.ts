@@ -1,7 +1,9 @@
 import {app, dialog} from 'electron';
 import {autoUpdater} from 'electron-updater';
-import logger from './logger';
-import {isDev, win} from './main';
+import {createLogger} from './services/LoggerService';
+
+const logger = createLogger('autoUpdate');
+import {win} from './main';
 
 /**
  * 配置自动更新
@@ -10,7 +12,7 @@ export function setupAutoUpdater() {
   logger.info('Updater', '初始化自动更新模块');
 
   // 配置日志
-  autoUpdater.logger = logger.getLogger();
+  autoUpdater.logger = logger;
 
   // 配置自动下载
   autoUpdater.autoDownload = true;
