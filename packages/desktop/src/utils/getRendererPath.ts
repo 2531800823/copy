@@ -1,11 +1,12 @@
 import {app} from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { isDev } from '../config/env';
 
 /**
  * 获取最可能的渲染进程路径
  */
-function getRendererPath() {
+export function getRendererPath() {
   if (isDev) {
     const devPath = path.join(__dirname, '../../../web/dist/'); // 开发环境使用web/dist
     console.log(`开发环境使用路径: ${devPath}`);

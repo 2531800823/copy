@@ -1,6 +1,8 @@
 import Store from 'electron-store';
 import {StoreConfig} from './common';
+import {injectable} from 'inversify';
 
+@injectable()
 class StoreManager<T extends StoreConfig> {
   private store: Store<T>;
   constructor() {
@@ -33,6 +35,6 @@ class StoreManager<T extends StoreConfig> {
   }
 }
 
-const storeManager = new StoreManager();
+// export const storeManager = new StoreManager();
 
-export default storeManager;
+export default StoreManager;

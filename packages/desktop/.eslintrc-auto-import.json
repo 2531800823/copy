@@ -1,11 +1,16 @@
 {
   "globals": {
+    "WEB_URL": true,
     "__dirname": true,
     "appName": true,
     "appUserData": true,
     "dataPath": true,
     "getLogConfig": true,
     "getLogPath": true,
-    "isDev": true
+    "isDev": true,
+    "isLinux": true,
+    "isMac": true,
+    "isProd": true,
+    "isWin": true
   }
 }

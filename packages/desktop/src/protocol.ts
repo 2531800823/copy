@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {app, protocol} from 'electron';
 import {createLogger} from './services/LoggerService';
-import {RENDERER_DIST} from './main';
+import { getRendererPath } from './utils/getRendererPath';
+import { isDev } from './config/env';
 
 const logger = createLogger('protocol');
 
@@ -15,6 +16,7 @@ export function setupProtocol() {
     return;
   }
 
+  const RENDERER_DIST = getRendererPath();
   logger.info(
     'Protocol',
     `设置app://协议处理器，使用资源目录: ${RENDERER_DIST}`

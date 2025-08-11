@@ -3,7 +3,6 @@ import {app, ipcMain} from 'electron';
 import {autoUpdater} from 'electron-updater';
 import {getWindowConfig, saveWindowConfig} from './services/store';
 import logger from './services/LoggerService';
-import { getAppAutoLaunch, setAppAutoLaunch } from './autoLaunch';
 
 export const IpcChannel = {
   /** 窗口置顶 */
@@ -58,13 +57,15 @@ export default function initIpcMain(mainWindow: BrowserWindow) {
   // 获取自启动状态
   ipcMain.handle(IpcChannel.GET_AUTO_LAUNCH, () => {
     logger.debug('IPC', '获取自启动状态');
-    return getAppAutoLaunch();
+    // return getAppAutoLaunch();
+    return false;
   });
 
   // 设置自启动状态
   ipcMain.handle(IpcChannel.SET_AUTO_LAUNCH, (_event, enable) => {
     logger.debug('IPC', `设置自启动状态: ${enable}`);
-    return setAppAutoLaunch(enable);
+    // return setAppAutoLaunch(enable);
+    return false;
   });
 
   // 检查更新

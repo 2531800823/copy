@@ -80,6 +80,7 @@ class TrayService {
           win.show();
           win.focus();
         }
+
       }
     });
   }
