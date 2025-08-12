@@ -29,6 +29,7 @@
     "build": "pnpm build:web && pnpm build:desktop"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^5.2.1",
     "@eslint-react/eslint-plugin": "1.48.5",
     "@eslint/js": "9.27.0",
     "@types/node": "22.15.26",
@@ -36,6 +37,8 @@
     "eslint": "9.27.0",
     "eslint-config-prettier": "10.1.5",
     "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
     "glob": "11.0.2",
     "globals": "16.2.0",
     "npm-run-all": "4.1.5",

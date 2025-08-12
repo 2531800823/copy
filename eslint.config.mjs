@@ -12,6 +12,8 @@ export default antfu({
   rules: {
     'no-console': 'off',
     'member-delimiter-style': 'off',
-    semi: ['error', 'always'],
+    'semi': ['error', 'always'],
+    'node/prefer-global/process': 'off',
+    'import/no-mutable-exports': 'off',
   },
 });

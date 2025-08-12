@@ -1,76 +1,80 @@
-import {BrowserWindow, Menu} from 'electron';
+import type { Subscription } from 'rxjs';
+import type { WindowStateManager } from './WindowStateManager';
+import type { ServiceInstanceMapping, ServiceMapping } from '@/services';
 import path from 'node:path';
-import {ApplicationLifecycle} from './ApplicationLifecycle';
-import {WindowStateManager} from './WindowStateManager';
-import {ProtocolManager} from './ProtocolManager';
-import {EventManager} from './EventManager';
+import { BrowserWindow, Menu } from 'electron';
+import { Container } from 'inversify';
+import { debounceTime, filter } from 'rxjs/operators';
+import { isDev } from '../config/env';
+import initIpcMain from '../ipcMain';
 import logger from '../services/LoggerService';
-import {isDev} from '../config/env';
-import {getRendererPath} from '../utils/getRendererPath';
-import {WindowManager} from './WindowManager';
-import {Container} from 'inversify';
-import {initServices} from './container';
-import {ServiceInstanceMapping, ServiceMapping} from '@/services';
-import {Config} from './Config';
+import { setupAutoUpdater } from '../update';
+import { getRendererPath } from '../utils/getRendererPath';
+import { Config } from './Config';
+import { initServices } from './container';
+import { ElectronNativeEventManager } from './ElectronNativeEventManager';
+import { ProtocolManager } from './ProtocolManager';
+import { WindowManager } from './WindowManager';
 
-  /**
-   * 应用配置接口
-   */
-  export interface ApplicationConfig {
-    /** 窗口默认配置 */
-    window?: {
-      width?: number;
-      height?: number;
-      autoHideMenuBar?: boolean;
-      frame?: boolean;
-    };
-    /** 开发环境配置 */
-    development?: {
-      webUrl?: string;
-      openDevTools?: boolean;
-    };
-    /** 生产环境配置 */
-    production?: {
-      resourcePath?: string;
-      appUrl?: string;
-    };
+/**
+ * 应用配置接口
+ */
+export interface ApplicationConfig {
+  /** 窗口默认配置 */
+  window?: {
+    width?: number
+    height?: number
+    autoHideMenuBar?: boolean
+    frame?: boolean
   }
+  /** 开发环境配置 */
+  development?: {
+    webUrl?: string
+    openDevTools?: boolean
+  }
+  /** 生产环境配置 */
+  production?: {
+    resourcePath?: string
+    appUrl?: string
+  }
+}
 
-  /**
-   * 完整应用配置接口（合并后的配置）
-   */
-  interface MergedApplicationConfig {
-    window: {
-      width: number;
-      height: number;
-      autoHideMenuBar: boolean;
-      frame: boolean;
-    };
-    development: {
-      webUrl: string;
-      openDevTools: boolean;
-    };
-    production: {
-      resourcePath: string;
-      appUrl: string;
-    };
+/**
+ * 完整应用配置接口（合并后的配置）
+ */
+interface MergedApplicationConfig {
+  window: {
+    width: number
+    height: number
+    autoHideMenuBar: boolean
+    frame: boolean
   }
+  development: {
+    webUrl: string
+    openDevTools: boolean
+  }
+  production: {
+    resourcePath: string
+    appUrl: string
+  }
+}
 
 /**
  * 主应用类
  * 整合所有管理器，提供统一的应用入口
+ * 使用 RxJS 事件流进行应用级别的事件管理
  */
 export class MainApplication {
   private _config: Config<MergedApplicationConfig>;
+  private _container!: Container;
   private _isInitialized = false;
   private _mainWindow: BrowserWindow | null = null;
-  private _container!: Container;
+  private _subscriptions = new Set<Subscription>();
 
   // 核心管理器实例
-  private _lifecycle = new ApplicationLifecycle();
-  private _windowStateManager = new WindowStateManager();
+  private _nativeEventManager = new ElectronNativeEventManager();
+  // private _windowStateManager = new WindowStateManager();
   private _protocolManager = new ProtocolManager();
-  private _eventManager = new EventManager();
   private _windowManager = WindowManager.getInstance();
 
   /**
@@ -79,12 +83,12 @@ export class MainApplication {
    */
   constructor(config: ApplicationConfig = {}) {
     this._config = new Config(this._mergeDefaultConfig(config));
-    this._setupManagerRelations();
+    this._setupAppEventSubscriptions();
     this.initContainer();
   }
 
   getService<T extends keyof ServiceMapping>(
-    key: T
+    key: T,
   ): ServiceInstanceMapping[T] {
     return this._container.get(key);
   }
@@ -107,9 +111,13 @@ export class MainApplication {
       // 1. 初始化协议管理器（必须在 app ready 之前）
       this._protocolManager.initialize();
 
+      // 2. 初始化 Electron 应用事件管理器
+      await this._nativeEventManager.initialize();
+
       this._isInitialized = true;
       logger.info('MainApplication', '应用初始化完成');
-    } catch (error) {
+    }
+    catch (error) {
       logger.error('MainApplication', '应用初始化失败', error);
       throw error;
     }
@@ -134,18 +142,20 @@ export class MainApplication {
    */
   public async stop(): Promise<this> {
     try {
-      // 停止窗口状态跟踪
-      this._windowStateManager.untrack();
+      // 取消所有事件订阅
+      this._subscriptions.forEach(subscription => subscription.unsubscribe());
+      this._subscriptions.clear();
 
-      // 清理事件管理器
-      this._eventManager.clear();
+      // 清理应用事件管理器
+      this._nativeEventManager.cleanup();
 
       // 重置协议管理器
       this._protocolManager.reset();
 
       this._isInitialized = false;
       logger.info('MainApplication', '应用已停止');
-    } catch (error) {
+    }
+    catch (error) {
       logger.error('MainApplication', '应用停止时出错', error);
     }
 
@@ -160,24 +170,17 @@ export class MainApplication {
   }
 
   /**
-   * 获取事件管理器
+   * 获取 Electron 应用事件管理器
    */
-  public getEventManager(): EventManager {
-    return this._eventManager;
-  }
-
-  /**
-   * 获取窗口状态管理器
-   */
-  public getWindowStateManager(): WindowStateManager {
-    return this._windowStateManager;
+  public getAppEventManager(): ElectronNativeEventManager {
+    return this._nativeEventManager;
   }
 
   /**
    * 合并默认配置
    */
   private _mergeDefaultConfig(
-    config: ApplicationConfig
+    config: ApplicationConfig,
   ): MergedApplicationConfig {
     return {
       window: {
@@ -189,9 +192,9 @@ export class MainApplication {
       },
       development: {
         webUrl:
-          config.development?.webUrl ||
-          process.env.VITE_WEB_URL ||
-          'http://localhost:3000',
+          config.development?.webUrl
+          || process.env.VITE_WEB_URL
+          || 'http://localhost:5173',
         openDevTools: config.development?.openDevTools ?? true,
       },
       production: {
@@ -202,35 +205,87 @@ export class MainApplication {
   }
 
   /**
-   * 设置管理器之间的关系
+   * 设置应用级别的 RxJS 事件订阅
    */
-  private _setupManagerRelations(): void {
-    // 事件管理器与其他管理器的集成将在需要时进行
-  }
+  private _setupAppEventSubscriptions(): void {
+    // 应用准备就绪时的处理
+    const appReadySub = this._nativeEventManager.appReady$.subscribe(
+      async () => {
+        await this._onAppReady();
+      },
+    )
+    this._subscriptions.add(appReadySub);
 
-  /**
-   * 设置生命周期回调
-   */
-  private _setupLifecycleCallbacks(): void {
-    // 应用准备就绪时的回调
-    this._lifecycle.onReady(async () => {
-      await this._onAppReady();
-    });
+    // 应用退出前的处理
+    const appBeforeQuitSub = this._nativeEventManager.appBeforeQuit$.subscribe(
+      async () => {
+        await this._onBeforeQuit();
+      },
+    )
+    this._subscriptions.add(appBeforeQuitSub);
 
-    // 应用退出前的回调
-    this._lifecycle.onBeforeQuit(async () => {
-      await this._onBeforeQuit();
-    });
+    // 所有窗口关闭时的处理
+    const appWindowAllClosedSub
+      = this._nativeEventManager.appWindowAllClosed$.subscribe(() => {
+        this._mainWindow = null;
+        logger.info('MainApplication', '所有窗口已关闭，主窗口引用已清空');
+      })
+    this._subscriptions.add(appWindowAllClosedSub);
 
-    // 所有窗口关闭时的回调
-    this._lifecycle.onWindowAllClosed(async () => {
-      this._mainWindow = null;
-    });
+    // 应用激活时的处理（主要用于 macOS）
+    const appActivateSub = this._nativeEventManager.appActivate$.subscribe(
+      async () => {
+        await this._onActivate();
+      },
+    )
+    this._subscriptions.add(appActivateSub);
 
-    // 应用激活时的回调
-    this._lifecycle.onActivate(async () => {
-      await this._onActivate();
-    });
+    // 应用将要退出的处理
+    const appWillQuitSub = this._nativeEventManager.appWillQuit$.subscribe(
+      () => {
+        logger.info('MainApplication', '应用将要退出');
+      },
+    )
+    this._subscriptions.add(appWillQuitSub);
+
+    // 应用已退出的处理
+    const appQuitSub = this._nativeEventManager.appQuit$.subscribe(() => {
+      logger.info('MainApplication', '应用已完全退出');
+    })
+    this._subscriptions.add(appQuitSub);
+
+    // 演示使用防抖的应用事件流（防止事件过于频繁）
+    const debouncedAppEventsSub = this._nativeEventManager
+      .getDebouncedAppEvents$(200)
+      .subscribe((event) => {
+        logger.debug('MainApplication', `应用事件（防抖）: ${event.type}`, {
+          timestamp: new Date(event.timestamp).toISOString(),
+        });
+      })
+    this._subscriptions.add(debouncedAppEventsSub);
+
+    // 演示使用过滤的应用事件流（只监听特定事件）
+    const filteredEventsSub = this._nativeEventManager
+      .getFilteredEventStream('app:ready', 'app:before-quit', 'app:quit')
+      .subscribe((event) => {
+        logger.info('MainApplication', `重要应用事件: ${event.type}`);
+      })
+    this._subscriptions.add(filteredEventsSub);
+
+    // 监听所有应用事件进行调试
+    const allAppEventsSub = this._nativeEventManager.allAppEvents$
+      .pipe(
+        filter(event => event.type.startsWith('app:')), // 确保只处理应用事件
+        debounceTime(50), // 轻微防抖以避免日志过多
+      )
+      .subscribe((event) => {
+        logger.debug('MainApplication', `应用事件: ${event.type}`, {
+          timestamp: new Date(event.timestamp).toISOString(),
+        });
+      })
+    this._subscriptions.add(allAppEventsSub);
+
+    logger.info('MainApplication', 'RxJS 应用事件订阅已设置');
   }
 
   /**
@@ -240,12 +295,15 @@ export class MainApplication {
     // 设置协议处理器
     if (!isDev) {
       this._protocolManager.setupAppProtocol(
-        this._config.get('production').resourcePath
-      );
+        this._config.get('production').resourcePath,
+      )
     }
 
     // 创建主窗口
     await this._createMainWindow();
+
+    // 初始化自动更新
+    setupAutoUpdater();
 
     logger.info('MainApplication', '应用准备就绪处理完成');
   }
@@ -279,7 +337,14 @@ export class MainApplication {
     logger.info('MainApplication', '正在创建主窗口');
 
     // 获取窗口状态
-    const windowState = this._windowStateManager.getSavedState();
+    // const windowState = this._windowStateManager.getSavedState();
+    const windowState = {
+      width: 800,
+      height: 600,
+      x: 0,
+      y: 0,
+      isMaximized: false,
+    };
 
     const windowConfig = this._config.get('window');
     // 创建窗口选项
@@ -297,15 +362,18 @@ export class MainApplication {
       },
       // 设置窗口位置
       ...(windowState.x !== undefined && windowState.y !== undefined
-        ? {x: windowState.x, y: windowState.y}
+        ? { x: windowState.x, y: windowState.y }
         : {}),
     };
 
     // 创建浏览器窗口
     this._mainWindow = new BrowserWindow(windowOptions);
 
+    // 初始化 IPC 通信
+    initIpcMain(this._mainWindow);
+
     // 开始跟踪窗口状态
-    this._windowStateManager.track(this._mainWindow);
+    // this._windowStateManager.track(this._mainWindow);
 
     // 根据保存的配置决定是否最大化窗口
     if (windowState.isMaximized) {
@@ -315,8 +383,14 @@ export class MainApplication {
     // 移除应用菜单
     Menu.setApplicationMenu(null);
 
-    // 设置窗口事件
-    this._setupWindowEvents();
+    // 设置窗口关闭事件（直接在窗口上监听，不通过事件管理器）
+    this._mainWindow.on('closed', () => {
+      logger.info(
+        'MainApplication',
+        `窗口已关闭 (ID: ${this._mainWindow?.id})`,
+      )
+      this._mainWindow = null;
+    })
 
     // 加载页面
     await this._loadWindow();
@@ -325,34 +399,11 @@ export class MainApplication {
   }
 
   /**
-   * 设置窗口事件
-   */
-  private _setupWindowEvents(): void {
-    if (!this._mainWindow) return;
-
-    // 设置基础窗口事件
-    this._eventManager.setupWindowEvents(this._mainWindow);
-
-    // 设置开发者工具快捷键
-    this._eventManager.setupDevToolsShortcut(this._mainWindow);
-
-    // 设置页面加载错误处理
-    this._eventManager.setupLoadErrorHandler(this._mainWindow);
-
-    // 设置渲染进程崩溃处理
-    this._eventManager.setupRenderProcessHandler(this._mainWindow);
-
-    // 监听窗口关闭事件
-    this._mainWindow.on('closed', () => {
-      this._mainWindow = null;
-    });
-  }
-
-  /**
    * 加载窗口页面
    */
   private async _loadWindow(): Promise<void> {
-    if (!this._mainWindow) return;
+    if (!this._mainWindow)
+      return;
 
     try {
       if (isDev) {
@@ -365,7 +416,8 @@ export class MainApplication {
         if (this._config.get('development').openDevTools) {
           this._mainWindow.webContents.openDevTools();
         }
-      } else {
+      }
+      else {
         // 生产环境
         const appUrl = this._config.get('production').appUrl;
         logger.info('MainApplication', `加载生产环境URL: ${appUrl}`);
@@ -374,13 +426,14 @@ export class MainApplication {
       }
 
       logger.info('MainApplication', '页面加载完成');
-    } catch (error) {
+    }
+    catch (error) {
       logger.error('MainApplication', '页面加载失败', error);
 
       // 打开开发者工具帮助调试
       if (
-        this._mainWindow &&
-        !this._mainWindow.webContents.isDevToolsOpened()
+        this._mainWindow
+        && !this._mainWindow.webContents.isDevToolsOpened()
       ) {
         this._mainWindow.webContents.openDevTools();
       }
@@ -401,5 +454,15 @@ export class MainApplication {
    */
   public get config(): Config<MergedApplicationConfig> {
     return this._config;
+  }
+
+  /**
+   * 获取事件统计信息
+   */
+  public getEventStats() {
+    return {
+      ...this._nativeEventManager.getEventStats(),
+      appSubscriptions: this._subscriptions.size,
+    };
   }
 }

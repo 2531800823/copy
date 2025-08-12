@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import {app, protocol} from 'electron';
-import {createLogger} from './services/LoggerService';
-import { getRendererPath } from './utils/getRendererPath';
-import { isDev } from './config/env';
+import { app, protocol } from 'electron';
+import { isDev } from './config/env'
+import { createLogger } from './services/LoggerService'
+import { getRendererPath } from './utils/getRendererPath'
 
 const logger = createLogger('protocol');
 
@@ -13,14 +13,14 @@ const logger = createLogger('protocol');
 export function setupProtocol() {
   if (isDev) {
     logger.debug('Protocol', `开发环境无需设置app://协议`);
-    return;
+    return
   }
 
   const RENDERER_DIST = getRendererPath();
   logger.info(
     'Protocol',
-    `设置app://协议处理器，使用资源目录: ${RENDERER_DIST}`
-  );
+    `设置app://协议处理器，使用资源目录: ${RENDERER_DIST}`,
+  )
   logger.info('Protocol', `应用执行路径: ${app.getPath('exe')}`);
   logger.info('Protocol', `应用根目录: ${app.getAppPath()}`);
 
@@ -49,7 +49,8 @@ export function setupProtocol() {
             const files = fs.readdirSync(altPath);
             logger.debug('Protocol', `备选目录内容: ${files.join(', ')}`);
             foundAlternative = true;
-          } catch (err) {
+          }
+          catch (err) {
             logger.error('Protocol', `无法读取备选目录内容: ${err}`);
           }
         }
@@ -58,12 +59,14 @@ export function setupProtocol() {
       if (!foundAlternative) {
         logger.error('Protocol', `未找到任何可用的资源目录`);
       }
-    } else {
+    }
+    else {
       // 检查index.html是否存在
       const indexPath = path.join(RENDERER_DIST, 'index.html');
       if (fs.existsSync(indexPath)) {
         logger.info('Protocol', `检测到index.html文件: ${indexPath}`);
-      } else {
+      }
+      else {
         logger.error('Protocol', `index.html文件不存在: ${indexPath}`);
       }
 
@@ -71,11 +74,13 @@ export function setupProtocol() {
       try {
         const files = fs.readdirSync(RENDERER_DIST);
         logger.debug('Protocol', `资源目录内容: ${files.join(', ')}`);
-      } catch (err) {
+      }
+      catch (err) {
         logger.error('Protocol', `无法读取资源目录内容: ${err}`);
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     logger.error('Protocol', `检查资源目录时发生错误: ${error}`);
   }
 
@@ -92,14 +97,15 @@ export function setupProtocol() {
 
       let filePath;
       if (
-        !decodedUrl ||
-        decodedUrl === './' ||
-        decodedUrl === '.' ||
-        !isStatic
+        !decodedUrl
+        || decodedUrl === './'
+        || decodedUrl === '.'
+        || !isStatic
       ) {
         // 返回 index.html
         filePath = path.join(RENDERER_DIST, 'index.html');
-      } else {
+      }
+      else {
         // 返回真实静态资源
         filePath = path.join(RENDERER_DIST, decodedUrl);
       }
@@ -110,8 +116,8 @@ export function setupProtocol() {
       if (!fs.existsSync(filePath)) {
         logger.error(
           'Protocol',
-          `文件不存在: ${filePath}，尝试查找其他可能的路径`
-        );
+          `文件不存在: ${filePath}，尝试查找其他可能的路径`,
+        )
 
         // 尝试处理以/开头的绝对路径请求（如/assets/xx.js）
         if (decodedUrl.startsWith('/')) {
@@ -119,12 +125,14 @@ export function setupProtocol() {
           if (fs.existsSync(altPath)) {
             logger.debug('Protocol', `找到替代路径: ${altPath}`);
             filePath = altPath;
-          } else {
-            logger.error('Protocol', `替代路径也不存在: ${altPath}`);
-            return new Response('File Not Found', {status: 404});
           }
-        } else {
-          return new Response('File Not Found', {status: 404});
+          else {
+            logger.error('Protocol', `替代路径也不存在: ${altPath}`);
+            return new Response('File Not Found', { status: 404 });
+          }
+        }
+        else {
+          return new Response('File Not Found', { status: 404 });
         }
       }
 
@@ -153,8 +161,8 @@ export function setupProtocol() {
       const data = fs.readFileSync(filePath);
       logger.debug(
         'Protocol',
-        `成功加载资源: ${filePath}, 大小: ${data.length} 字节, MIME: ${mimeType}`
-      );
+        `成功加载资源: ${filePath}, 大小: ${data.length} 字节, MIME: ${mimeType}`,
+      )
 
       return new Response(data, {
         status: 200,
@@ -162,9 +170,10 @@ export function setupProtocol() {
           'Content-Type': mimeType,
         },
       });
-    } catch (error: any) {
+    }
+    catch (error: any) {
       logger.error('Protocol', `处理请求时出错: ${error.message}`, error);
-      return new Response('Internal Server Error', {status: 500});
+      return new Response('Internal Server Error', { status: 500 });
     }
   });
 }

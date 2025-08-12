@@ -1,17 +1,17 @@
+import type { BrowserWindow } from 'electron';
+import type { ApplicationConfig } from './core/MainApplication'
+import { MainApplication } from './core/MainApplication';
+import { containerServices, EnumServiceKey } from './services';
+import logger from './services/LoggerService';
+import { EnumStoreKey } from './services/store';
 /**
  * Electron 主进程入口文件
- * 使用面向对象架构管理应用生命周期
+ * 使用面向对象架构和纯 RxJS 事件流管理应用生命周期
  */
 import 'reflect-metadata';
-import {BrowserWindow} from 'electron';
-import {MainApplication, ApplicationConfig} from './core/MainApplication';
-import logger from './services/LoggerService';
-import {EnumServiceKey, containerServices} from './services';
-import {EnumStoreKey} from './services/store';
-import {skip} from 'rxjs';
 
 /** 主窗口实例 - 保持向后兼容性 */
-export let win: BrowserWindow | null = null;
+export let win: BrowserWindow | null = null
 
 /**
  * 应用配置
@@ -24,68 +24,74 @@ const appConfig: ApplicationConfig = {
     frame: true,
   },
   development: {
-    webUrl: process.env.VITE_WEB_URL || 'http://localhost:3000',
+    webUrl: process.env.VITE_WEB_URL || 'http://localhost:7010',
     openDevTools: true,
   },
   production: {
     appUrl: 'app://./index.html#/',
   },
-};
+}
 
 /**
  * 创建并启动应用实例
  */
 async function startApplication() {
   try {
-    const app = new MainApplication(appConfig);
-    const storeManager = app.getService(EnumServiceKey.StoreManager);
-    storeManager.set(EnumStoreKey.WINDOW, {
-      width: 800,
-      height: 600,
-      x: 100,
-      y: 100,
-      isMaximized: false,
-    });
-    console.log(storeManager.get(EnumStoreKey.WINDOW));
+    const app = new MainApplication(appConfig)
 
-    // 方案1: 跳过初始值，只监听后续变化
-    app.config
-      .watch('window')
-      .pipe(skip(1))
-      .subscribe((window) => {
-        console.log('🚀 测试 windowConfig 变化:', window);
-      });
-
-    // 方案2: 如果需要初始值和变化都监听，可以区分处理
-    // app.config.watch('window').subscribe((window) => {
-    //   console.log('🚀 测试 windowConfig (包含初始值):', window);
-    // });
-    app.config.set('window', {
-      width: 1000,
-      height: 800,
-      autoHideMenuBar: true,
-      frame: true,
-    });
-    // await app.start();
+    await app.start()
 
     // 更新全局 win 变量以保持兼容性
-    // win = app.getMainWindow();
+    win = app.getMainWindow()
 
-    // // 监听主窗口变化
-    // app.getEventManager().on('window:created', (window) => {
-    //   win = window;
-    // });
+    // 使用纯 RxJS Observable 监听应用级别的事件
+    const appEventManager = app.getAppEventManager();
 
-    // app.getEventManager().on('window:destroyed', () => {
-    //   win = null;
-    // });
+    // 监听应用准备就绪事件
+    appEventManager.appReady$.subscribe(() => {
+      win = app.getMainWindow(); // 应用准备就绪后更新窗口引用
+      logger.info('Main', '应用准备就绪，窗口引用已更新');
+    })
 
-    // logger.info('Main', '应用启动成功');
-  } catch (error) {
-    logger.error('Main', '应用启动失败', error);
-    process.exit(1);
+    // 监听所有窗口关闭事件
+    appEventManager.appWindowAllClosed$.subscribe(() => {
+      win = null; // 所有窗口关闭时清空引用
+      logger.info('Main', '所有窗口已关闭，全局窗口引用已清空');
+    })
+
+    // 监听应用激活事件（macOS）
+    appEventManager.appActivate$.subscribe(() => {
+      // 应用激活时可能会重新创建窗口
+      setTimeout(() => {
+        win = app.getMainWindow();
+        if (win) {
+          logger.info('Main', '应用激活后窗口引用已更新');
+        }
+      }, 100); // 小延迟确保窗口创建完成
+    })
+
+    // 监听应用退出事件
+    appEventManager.appQuit$.subscribe(() => {
+      logger.info('Main', '应用已完全退出');
+    })
+
+    // 使用 RxJS 操作符组合监听关键事件
+    appEventManager.getFilteredEventStream('app:ready', 'app:quit').subscribe((event) => {
+      logger.info('Main', `关键应用事件: ${event.type}`);
+    })
+
+    // 打印应用事件统计信息
+    const stats = app.getEventStats();
+    logger.info('Main', '应用启动成功', {
+      isInitialized: stats.isInitialized,
+      appSubscriptions: stats.appSubscriptions,
+    })
+  }
+  catch (error) {
+    logger.error('Main', '应用启动失败', error)
+    process.exit(1)
   }
 }
 
 // 启动应用
-startApplication();
+startApplication()

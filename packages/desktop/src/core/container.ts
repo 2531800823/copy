@@ -1,5 +1,5 @@
-import {containerServices} from '@/services';
-import {Container} from 'inversify';
+import type { Container } from 'inversify'
+import { containerServices } from '@/services'
 
 /**
  * 初始化所有服务，使用字符串键作为标识符绑定服务
@@ -11,6 +11,6 @@ export function initServices(container: Container) {
     console.log('🚀 绑定服务 - 键:', key, '类:', ServiceClass);
     // 关键修复：使用字符串键作为标识符，而不是类本身
     container.bind(key).to(ServiceClass);
-  });
+  })
   console.log('🚀 容器初始化完成');
 }
