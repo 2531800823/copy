@@ -1,13 +1,11 @@
 import StoreManager from './store/storeManager';
-
-
-export enum EnumServiceKey {
-  StoreManager = 'StoreManager',
-}
+import {EnumServiceKey} from './type';
+import {WindowStateManager} from './WindowStateManager';
 
 export const containerServices = {
   [EnumServiceKey.StoreManager]: StoreManager,
-};
+  [EnumServiceKey.WindowStateManager]: WindowStateManager,
+}
 
 export type ServiceMapping = typeof containerServices;
 

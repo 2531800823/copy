@@ -1,10 +1,11 @@
 import type { Subscription } from 'rxjs';
-import type { WindowStateManager } from './WindowStateManager';
 import type { ServiceInstanceMapping, ServiceMapping } from '@/services';
 import path from 'node:path';
 import { BrowserWindow, Menu } from 'electron';
 import { Container } from 'inversify';
 import { debounceTime, filter } from 'rxjs/operators';
+// import type {WindowStateManager} from './WindowStateManager';
+import { EnumServiceKey } from '@/services/type';
 import { isDev } from '../config/env';
 import initIpcMain from '../ipcMain';
 import logger from '../services/LoggerService';
@@ -83,8 +84,10 @@ export class MainApplication {
    */
   constructor(config: ApplicationConfig = {}) {
     this._config = new Config(this._mergeDefaultConfig(config));
-    this._setupAppEventSubscriptions();
     this.initContainer();
+    const windowStateManager = this.getService(EnumServiceKey.WindowStateManager);
+    console.log('🚀 liu123 ~ windowStateManager:', windowStateManager)
+    this._setupAppEventSubscriptions();
   }
 
   getService<T extends keyof ServiceMapping>(
@@ -209,81 +212,81 @@ export class MainApplication {
    */
   private _setupAppEventSubscriptions(): void {
     // 应用准备就绪时的处理
-    const appReadySub = this._nativeEventManager.appReady$.subscribe(
-      async () => {
+    this._subscriptions.add(
+      this._nativeEventManager.appReady$.subscribe(async () => {
         await this._onAppReady();
-      },
+      }),
     )
-    this._subscriptions.add(appReadySub);
 
     // 应用退出前的处理
-    const appBeforeQuitSub = this._nativeEventManager.appBeforeQuit$.subscribe(
-      async () => {
+    this._subscriptions.add(
+      this._nativeEventManager.appBeforeQuit$.subscribe(async () => {
         await this._onBeforeQuit();
-      },
+      }),
     )
-    this._subscriptions.add(appBeforeQuitSub);
 
     // 所有窗口关闭时的处理
-    const appWindowAllClosedSub
-      = this._nativeEventManager.appWindowAllClosed$.subscribe(() => {
+    this._subscriptions.add(
+      this._nativeEventManager.appWindowAllClosed$.subscribe(() => {
         this._mainWindow = null;
         logger.info('MainApplication', '所有窗口已关闭，主窗口引用已清空');
-      })
-    this._subscriptions.add(appWindowAllClosedSub);
+      }),
+    )
 
     // 应用激活时的处理（主要用于 macOS）
-    const appActivateSub = this._nativeEventManager.appActivate$.subscribe(
-      async () => {
+    this._subscriptions.add(
+      this._nativeEventManager.appActivate$.subscribe(async () => {
         await this._onActivate();
-      },
+      }),
     )
-    this._subscriptions.add(appActivateSub);
 
     // 应用将要退出的处理
-    const appWillQuitSub = this._nativeEventManager.appWillQuit$.subscribe(
-      () => {
+    this._subscriptions.add(
+      this._nativeEventManager.appWillQuit$.subscribe(() => {
         logger.info('MainApplication', '应用将要退出');
-      },
+      }),
     )
-    this._subscriptions.add(appWillQuitSub);
 
     // 应用已退出的处理
-    const appQuitSub = this._nativeEventManager.appQuit$.subscribe(() => {
-      logger.info('MainApplication', '应用已完全退出');
-    })
-    this._subscriptions.add(appQuitSub);
+    this._subscriptions.add(
+      this._nativeEventManager.appQuit$.subscribe(() => {
+        logger.info('MainApplication', '应用已完全退出');
+      }),
+    )
 
     // 演示使用防抖的应用事件流（防止事件过于频繁）
-    const debouncedAppEventsSub = this._nativeEventManager
-      .getDebouncedAppEvents$(200)
-      .subscribe((event) => {
-        logger.debug('MainApplication', `应用事件（防抖）: ${event.type}`, {
-          timestamp: new Date(event.timestamp).toISOString(),
-        });
-      })
-    this._subscriptions.add(debouncedAppEventsSub);
+    this._subscriptions.add(
+      this._nativeEventManager
+        .getDebouncedAppEvents$(200)
+        .subscribe((event) => {
+          logger.debug('MainApplication', `应用事件（防抖）: ${event.type}`, {
+            timestamp: new Date(event.timestamp).toISOString(),
+          });
+        }),
+    )
 
     // 演示使用过滤的应用事件流（只监听特定事件）
-    const filteredEventsSub = this._nativeEventManager
-      .getFilteredEventStream('app:ready', 'app:before-quit', 'app:quit')
-      .subscribe((event) => {
-        logger.info('MainApplication', `重要应用事件: ${event.type}`);
-      })
-    this._subscriptions.add(filteredEventsSub);
+    this._subscriptions.add(
+      this._nativeEventManager
+        .getFilteredEventStream('app:ready', 'app:before-quit', 'app:quit')
+        .subscribe((event) => {
+          logger.info('MainApplication', `重要应用事件: ${event.type}`);
+        }),
+    )
 
     // 监听所有应用事件进行调试
-    const allAppEventsSub = this._nativeEventManager.allAppEvents$
-      .pipe(
-        filter(event => event.type.startsWith('app:')), // 确保只处理应用事件
-        debounceTime(50), // 轻微防抖以避免日志过多
-      )
-      .subscribe((event) => {
-        logger.debug('MainApplication', `应用事件: ${event.type}`, {
-          timestamp: new Date(event.timestamp).toISOString(),
-        });
-      })
-    this._subscriptions.add(allAppEventsSub);
+    this._subscriptions.add(
+      this._nativeEventManager.allAppEvents$
+        .pipe(
+          filter(event => event.type.startsWith('app:')), // 确保只处理应用事件
+          debounceTime(50), // 轻微防抖以避免日志过多
+        )
+        .subscribe((event) => {
+          logger.debug('MainApplication', `应用事件: ${event.type}`, {
+            timestamp: new Date(event.timestamp).toISOString(),
+          });
+        }),
+    )
 
     logger.info('MainApplication', 'RxJS 应用事件订阅已设置');
   }
@@ -301,6 +304,8 @@ export class MainApplication {
 
     // 创建主窗口
     await this._createMainWindow();
+
+    this.getService(EnumServiceKey.WindowStateManager).start(this._mainWindow);
 
     // 初始化自动更新
     setupAutoUpdater();
@@ -331,20 +336,18 @@ export class MainApplication {
   private async _createMainWindow(): Promise<void> {
     if (this._mainWindow && !this._mainWindow.isDestroyed()) {
       this._mainWindow.focus();
-      return;
+      return
     }
 
     logger.info('MainApplication', '正在创建主窗口');
 
     // 获取窗口状态
-    // const windowState = this._windowStateManager.getSavedState();
-    const windowState = {
-      width: 800,
-      height: 600,
-      x: 0,
-      y: 0,
-      isMaximized: false,
-    };
+    const windowStateManager = this.getService(
+      EnumServiceKey.WindowStateManager,
+    )
+    console.log("🚀 liu123 ~ windowStateManager:", windowStateManager)
+    const windowState = windowStateManager.getSavedState();
+    console.log('🚀 liu123 ~ windowState:', windowState);
 
     const windowConfig = this._config.get('window');
     // 创建窗口选项
@@ -368,6 +371,8 @@ export class MainApplication {
 
     // 创建浏览器窗口
     this._mainWindow = new BrowserWindow(windowOptions);
+
+    windowStateManager.start(this._mainWindow);
 
     // 初始化 IPC 通信
     initIpcMain(this._mainWindow);

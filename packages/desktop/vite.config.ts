@@ -1,7 +1,7 @@
-import path from 'node:path';
-import {defineConfig} from 'vite';
-import electron from 'vite-plugin-electron/simple';
-import AutoImport from 'unplugin-auto-import/vite';
+import path from 'node:path'
+import AutoImport from 'unplugin-auto-import/vite'
+import { defineConfig } from 'vite'
+import electron from 'vite-plugin-electron/simple'
 
 const autoImport = AutoImport({
   dirs: [
@@ -16,7 +16,7 @@ const autoImport = AutoImport({
     filepath: './.eslintrc-auto-import.json',
     globalsPropValue: true,
   },
-});
+})
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -31,6 +31,9 @@ export default defineConfig({
               '@': path.resolve(__dirname, 'src'),
             },
           },
+          build: {
+            sourcemap: true,
+          },
         },
       },
       preload: {
@@ -42,14 +45,11 @@ export default defineConfig({
               '@': path.resolve(__dirname, 'src'),
             },
           },
+          build: {
+            sourcemap: true,
+          },
         },
       },
     }),
   ],
-
-  build: {
-    rollupOptions: {
-      external: ['electron'],
-    },
-  },
-});
+})

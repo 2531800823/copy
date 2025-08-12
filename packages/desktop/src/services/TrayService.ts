@@ -1,10 +1,11 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
-import {app, dialog, Menu, NativeImage, nativeImage, Tray} from 'electron';
-import {createLogger} from './LoggerService';
-import {win} from '@/main';
-import {checkForUpdates} from '@/update';
+import type { NativeImage } from 'electron'
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
+import { app, dialog, Menu, nativeImage, Tray } from 'electron';
+import { win } from '@/main'
+import { checkForUpdates } from '@/update'
+import { createLogger } from './LoggerService'
 
 const logger = createLogger('tray');
 
@@ -27,14 +28,14 @@ function getIconPath() {
     'build',
     'icons',
     'png',
-    '32x32.png'
-  );
+    '32x32.png',
+  )
 
   // 检查路径存在性（为了调试目的打印路径）
   logger.info(
     'Tray',
-    `生产环境图标路径: ${normalPath}, 文件存在: ${fs.existsSync(normalPath)}`
-  );
+    `生产环境图标路径: ${normalPath}, 文件存在: ${fs.existsSync(normalPath)}`,
+  )
 
   return normalPath;
 }
@@ -63,8 +64,8 @@ class TrayService {
     const iconPath = getIconPath();
     logger.info(
       'Tray',
-      `iconPath: ${iconPath}, exists: ${fs.existsSync(iconPath)}`
-    );
+      `iconPath: ${iconPath}, exists: ${fs.existsSync(iconPath)}`,
+    )
     this.icon = nativeImage.createFromPath(iconPath);
     logger.info('Tray', `icon is empty: ${this.icon.isEmpty()}`);
   }
@@ -76,14 +77,15 @@ class TrayService {
       if (win) {
         if (win.isVisible()) {
           win.hide();
-        } else {
+        }
+        else {
           win.show();
           win.focus();
         }
-
       }
     });
   }
+
   createContextMenu() {
     this.contextMenu = Menu.buildFromTemplate([
       {
@@ -91,13 +93,14 @@ class TrayService {
         type: 'checkbox',
         checked: false,
         click: (menuItem) => {
-          if (!win) return;
+          if (!win)
+            return;
 
           win.setAlwaysOnTop(menuItem.checked);
           logger.info('Tray', `窗口置顶状态: ${menuItem.checked}`);
         },
       },
-      {type: 'separator'},
+      { type: 'separator' },
       {
         label: '关于',
         click: () => {
@@ -123,7 +126,7 @@ class TrayService {
         },
       },
 
-      {type: 'separator'},
+      { type: 'separator' },
       {
         label: '退出',
         click: () => {

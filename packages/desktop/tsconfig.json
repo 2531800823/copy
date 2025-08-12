@@ -4,6 +4,8 @@
     "jsx": "react-jsx",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "useDefineForClassFields": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "baseUrl": ".",
     "module": "ESNext",
 
@@ -22,11 +24,9 @@
     "noUnusedParameters": false,
     "noEmit": true,
     "isolatedModules": true,
-    "skipLibCheck": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "skipLibCheck": true
   },
-  "references": [{"path": "./tsconfig.node.json"}],
+  "references": [{ "path": "./tsconfig.node.json" }],
   "include": ["electron", "src/**/*", "src/types/auto-imports.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

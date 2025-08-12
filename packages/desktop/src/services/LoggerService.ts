@@ -1,7 +1,8 @@
+import type { Logger } from 'log4js';
 import util from 'node:util';
-import {configure, getLogger, Logger, shutdown} from 'log4js';
-import {getLogConfig} from '@/config/logger';
-import {app} from 'electron';
+import { app } from 'electron';
+import { configure, getLogger, shutdown } from 'log4js';
+import { getLogConfig } from '@/config/logger';
 
 util.inspect.defaultOptions.showHidden = true;
 util.inspect.defaultOptions.depth = 100;
@@ -9,7 +10,7 @@ configure(getLogConfig());
 
 app.on('quit', () => {
   shutdown(() => {});
-});
+})
 
 /**
  * 日志管理器
@@ -29,7 +30,7 @@ class LoggerService {
    * @param args 日志内容
    */
   log(...args: unknown[]): void {
-    this.logger.info.apply(this.logger, args as [unknown, ...unknown[]]);
+    this.logger.info(...(args as [unknown, ...unknown[]]));
   }
 
   /**
@@ -37,21 +38,26 @@ class LoggerService {
    * @param args 日志内容
    */
   info(...args: unknown[]): void {
-    this.logger.info.apply(this.logger, args as [unknown, ...unknown[]]);
+    this.logger.info(...(args as [unknown, ...unknown[]]));
   }
+
   warn(...args: unknown[]): void {
-    this.logger.warn.apply(this.logger, args as [unknown, ...unknown[]]);
+    this.logger.warn(...(args as [unknown, ...unknown[]]));
   }
+
   error(...args: unknown[]): void {
-    this.logger.error.apply(this.logger, args as [unknown, ...unknown[]]);
+    this.logger.error(...(args as [unknown, ...unknown[]]));
   }
+
   debug(...args: unknown[]): void {
-    this.logger.debug.apply(this.logger, args as [unknown, ...unknown[]]);
+    this.logger.debug(...(args as [unknown, ...unknown[]]));
   }
+
   time(label = 'default') {
     this.timers.set(label, Date.now());
     this.logger.info(`Timer '${label}' started`);
   }
+
   timeEnd(label = 'default') {
     const startTime = this.timers.get(label);
     if (startTime === undefined) {
@@ -63,6 +69,7 @@ class LoggerService {
     this.logger.info(`Timer '${label}': ${duration}ms`);
     return duration;
   }
+
   timeLog(label = 'default', ...data: unknown[]): void {
     const startTime = this.timers.get(label);
     if (startTime === undefined) {
@@ -72,18 +79,20 @@ class LoggerService {
     const duration = Date.now() - startTime;
     this.logger.info(`Timer '${label}': ${duration}ms`, ...data);
   }
+
   getActiveTimers(): string[] {
     return Array.from(this.timers.keys());
   }
+
   clearAllTimers(): void {
     this.timers.clear();
   }
 }
 
 /** 创建全局日志记录器实例 */
-export const createLogger = (category = 'default') => {
+export function createLogger(category = 'default') {
   return new LoggerService(category);
-};
+}
 
 const logger = createLogger();
 
