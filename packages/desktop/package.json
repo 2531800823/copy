@@ -1,6 +1,5 @@
 {
   "name": "desktop",
-  "type": "module",
   "version": "0.0.12",
   "private": true,
   "description": "Electron desktop application",
@@ -13,8 +12,8 @@
   "scripts": {
     "dev": "chcp 65001 >nul 2>&1 && vite",
     "build": "tsc && vite build && electron-builder",
-    "build:dir": "tsc && vite build && electron-builder --dir",
-    "build:win": "tsc && vite build && electron-builder --win",
+    "build:dir": "tsc && vite build && electron-builder --config ./electron-builder.js --dir",
+    "build:win": "tsc && vite build && electron-builder --config ./electron-builder.js --win nsis",
     "build:mac": "tsc && vite build && electron-builder --mac",
     "build:linux": "tsc && vite build && electron-builder --linux",
     "publish": "tsc && vite build && electron-builder --publish always",
@@ -35,6 +34,7 @@
   "devDependencies": {
     "electron": "35.1.5",
     "electron-builder": "25.1.8",
+    "png-to-ico": "^2.1.8",
     "typescript": "5.8.3",
     "vite": "6.3.1",
     "vite-plugin-electron": "0.28.6",
