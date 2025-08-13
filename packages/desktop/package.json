@@ -10,7 +10,8 @@
   },
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "chcp 65001 >nul 2>&1 && vite",
+    "dev": "pnpm clean && chcp 65001 >nul 2>&1 && vite",
+    "clean": "rimraf dist-electron",
     "build": "tsc && vite build && electron-builder",
     "build:dir": "tsc && vite build && electron-builder --config ./electron-builder.js --dir",
     "build:win": "tsc && vite build && electron-builder --config ./electron-builder.js --win nsis",
@@ -27,11 +28,13 @@
     "electron-updater": "6.1.7",
     "fs-extra": "^11.3.1",
     "inversify": "^7.7.0",
+    "lodash-es": "4.17.21",
     "log4js": "6.9.1",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.1"
   },
   "devDependencies": {
+    "@types/lodash-es": "4.17.12",
     "electron": "35.1.5",
     "electron-builder": "25.1.8",
     "png-to-ico": "^2.1.8",

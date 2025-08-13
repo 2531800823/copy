@@ -4,6 +4,7 @@ import {createLogger} from './services/LoggerService';
 
 const logger = createLogger('autoUpdate');
 import {win} from './main';
+import { isDev } from './common';
 
 /**
  * 配置自动更新

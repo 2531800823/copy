@@ -80,6 +80,9 @@ importers:
       inversify:
         specifier: ^7.7.0
         version: 7.7.0(reflect-metadata@0.2.2)
+      lodash-es:
+        specifier: 4.17.21
+        version: 4.17.21
       log4js:
         specifier: 6.9.1
         version: 6.9.1
@@ -90,6 +93,9 @@ importers:
         specifier: 7.8.1
         version: 7.8.1
     devDependencies:
+      '@types/lodash-es':
+        specifier: 4.17.12
+        version: 4.17.12
       electron:
         specifier: 35.1.5
         version: 35.1.5

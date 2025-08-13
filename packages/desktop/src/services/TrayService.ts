@@ -147,7 +147,7 @@ class TrayService {
     dialog.showMessageBox({
       title: '关于',
       type: 'info',
-      message: appName,
+      message: '关于',
       detail,
       noLink: true,
       buttons: ['确定'],

@@ -1,8 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {app, protocol} from 'electron';
-import logger from '../services/LoggerService';
-import {isDev} from '../config/env';
+import {createLogger} from './LoggerService';
+import {isPathRouter, LOCATION, PROTOCOL} from '@/common/protocol';
+import {getMimeType} from '@/utils/getMimeType';
+import {inject, injectable} from 'inversify';
+import {Config} from '@/core/Config';
+import {EnumServiceKey} from './type';
+import {isDev} from '@/common';
+
+const logger = createLogger('ProtocolService');
 
 /**
  * 协议配置接口
@@ -21,9 +28,12 @@ export interface ProtocolConfig {
  * 协议管理器
  * 负责管理自定义协议的注册和处理
  */
-export class ProtocolManager {
+@injectable()
+export class ProtocolService {
   private _registeredProtocols = new Map<string, ProtocolConfig>();
   private _isInitialized = false;
+
+  constructor(@inject(EnumServiceKey.Config) private readonly config: Config) {}
 
   /**
    * 初始化协议管理器
@@ -80,7 +90,7 @@ export class ProtocolManager {
    * 设置应用协议处理器（在 app ready 之后调用）
    * @param resourcePath 资源文件路径
    */
-  public setupAppProtocol(resourcePath: string): this {
+  public setupAppProtocol(): this {
     if (isDev) {
       logger.debug('ProtocolManager', '开发环境无需设置 app:// 协议');
       return this;
@@ -92,8 +102,9 @@ export class ProtocolManager {
     }
 
     try {
+      const resourcePath = this.config.get('resourcePath');
       this._validateResourcePath(resourcePath);
-      this._registerAppProtocolHandler(resourcePath);
+      this._registerAppProtocolHandler();
 
       logger.info(
         'ProtocolManager',
@@ -202,20 +213,83 @@ export class ProtocolManager {
    * 注册 app 协议处理器
    * @param resourcePath 资源路径
    */
-  private _registerAppProtocolHandler(resourcePath: string): void {
-    protocol.registerFileProtocol('app', (request, callback) => {
-      const url = request.url.substr(6); // 移除 'app://' 前缀
-      const filePath = path.normalize(path.join(resourcePath, url));
+  private _registerAppProtocolHandler(): void {
+    const resourcePath = this.config.get('resourcePath');
+    protocol.handle(PROTOCOL, async (request) => {
+      console.log('🚀 liu123 ~ protocol.handle ~ 收到请求:', request.url);
 
-      logger.debug(
-        'ProtocolManager',
-        `处理协议请求: ${request.url} -> ${filePath}`
-      );
+      const urlWithoutScheme = request.url.replace(LOCATION, '');
 
-      callback({path: filePath});
+      if (isPathRouter(urlWithoutScheme)) {
+        const filePath = path.join(resourcePath, 'index.html');
+        const data = fs.readFileSync(filePath);
+
+        // 根据文件类型设置正确的 Content-Type
+        const contentType = getMimeType(filePath);
+        console.log(
+          '🚀 liu123 ~ protocol.handle ~ 设置Content-Type:',
+          contentType
+        );
+
+        // 创建响应对象
+        const response = new Response(data, {
+          headers: {
+            'Content-Type': contentType,
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+        return response;
+      }
+      try {
+        // 获取URL中协议之后的部分，例如 'index.html' 或 'assets/index-BFFICt56.js'
+        let url = urlWithoutScheme;
+
+        // 智能路径解析：处理各种可能的路径格式
+        let filePath = path.join(resourcePath, url);
+
+        // 检查文件是否存在
+        if (fs.existsSync(filePath)) {
+          // 使用同步读取，因为 protocol.handle 需要同步返回
+          const data = fs.readFileSync(filePath);
+          console.log(
+            '🚀 liu123 ~ protocol.handle ~ 文件读取成功，数据长度:',
+            data.length
+          );
+
+          // 根据文件类型设置正确的 Content-Type
+          const contentType = getMimeType(filePath);
+
+          // 创建响应对象
+          const response = new Response(data, {
+            headers: {
+              'Content-Type': contentType,
+              'Access-Control-Allow-Origin': '*',
+            },
+          });
+
+          logger.info(
+            'ProtocolManager',
+            '响应创建成功',
+            JSON.stringify({
+              filePath,
+              dataLength: data.length,
+              contentType,
+              response,
+            })
+          );
+          return response;
+        } else {
+          logger.error('🚀 liu123 ~ protocol.handle ~ 文件不存在:', filePath);
+          // 如果文件不存在，返回404错误
+          return new Response('File not found', {status: 404});
+        }
+      } catch (error) {
+        logger.error('🚀 liu123 ~ protocol.handle ~ 发生错误:', error);
+        return new Response('Internal Server Error', {status: 500});
+      }
     });
 
-    logger.info('ProtocolManager', 'app:// 协议处理器已注册');
+    logger.info('ProtocolManager', `${PROTOCOL}:// 协议处理器已注册`);
   }
 
   /**

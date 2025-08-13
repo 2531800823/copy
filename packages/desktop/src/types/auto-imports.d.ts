@@ -6,17 +6,6 @@
 // biome-ignore lint: disable
 export {}
 declare global {
-  const WEB_URL: typeof import('../config/index')['WEB_URL']
-  const __dirname: typeof import('../config/path')['__dirname']
-  const appName: typeof import('../config/index')['appName']
-  const appUserData: typeof import('../config/path')['appUserData']
-  const dataPath: typeof import('../config/path')['dataPath']
   const getLogConfig: typeof import('../config/logger')['getLogConfig']
   const getLogPath: typeof import('../config/logger')['getLogPath']
-  const isDev: typeof import('../config/index')['isDev']
-  const isLinux: typeof import('../config/index')['isLinux']
-  const isMac: typeof import('../config/index')['isMac']
-  const isProd: typeof import('../config/index')['isProd']
-  const isWin: typeof import('../config/index')['isWin']
-  const liu: typeof import('../config/path')['liu']
 }

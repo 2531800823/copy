@@ -1,6 +1,6 @@
 import type {Configuration} from 'log4js';
 import path from 'node:path';
-import {dataPath} from './path';
+import {dataPath} from '../common/path';
 
 const defaultLogConfig = {
   type: 'dateFile',

@@ -12,7 +12,7 @@ import {
 } from 'electron';
 import {IPlugin, PluginContext, PluginLifecycle} from '../core/PluginSystem';
 import logger from '../services/LoggerService';
-import {appName} from '../config';
+import { PROTOCOL } from '@/common/protocol';
 
 /**
  * 托盘菜单项配置
@@ -399,7 +399,7 @@ export class TrayPlugin implements IPlugin {
     dialog.showMessageBox({
       title: '关于',
       type: 'info',
-      message: appName || '我的应用',
+      message: PROTOCOL || '我的应用',
       detail,
       noLink: true,
       buttons: ['确定'],

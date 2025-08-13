@@ -24,7 +24,6 @@ export class WindowStateManager {
     @inject(EnumServiceKey.StoreManager) private storeManager: StoreManager,
     defaultState: WindowState = {},
   ) {
-    console.log('🚀 liu123 ~ storeManager111:', storeManager);
     this._defaultState = {
       width: 800,
       height: 600,
@@ -34,7 +33,6 @@ export class WindowStateManager {
   }
 
   start(window: BrowserWindow | null) {
-    console.log('🚀 liu123 ~ window:', window);
     if (!window) {
       logger.warn('WindowStateManager', '没有窗口实例，无法跟踪窗口状态');
       return;
@@ -179,7 +177,6 @@ export class WindowStateManager {
    * 设置事件监听器
    */
   private _setupEventListeners(): void {
-    console.log('🚀 liu123 ~ this._window11:', this._window)
     if (!this._window)
       return;
 
@@ -213,7 +210,6 @@ export class WindowStateManager {
    * 处理窗口变化事件
    */
   private _handleWindowChange(): void {
-    console.log('🚀 liu123 ~ this._window:', this._window)
     if (!this._window?.isMaximized()) {
       this._saveCurrentState();
     }
@@ -270,7 +266,7 @@ export class WindowStateManager {
    */
   private _saveCurrentState(): void {
     const currentState = this.getCurrentState();
-    console.log('🚀 liu123 ~ currentState:', currentState);
+    logger.info('WindowStateManager', '保存当前状态', currentState);
     if (currentState) {
       this._saveState(currentState);
     }

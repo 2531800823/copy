@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from 'electron';
-import {IpcChannel} from './ipcMain';
+import { IpcChannel } from './ipc/channels';
 
 // 日志接口类型
 interface LogAPI {
