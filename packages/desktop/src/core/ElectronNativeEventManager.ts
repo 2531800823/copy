@@ -14,6 +14,10 @@ export interface AppLifecycleEvents {
   'app:activate': void
   'app:will-quit': void
   'app:quit': void
+  'app:second-instance': {
+    argv: string[]
+    cwd: string
+  }
 }
 
 /**
@@ -42,6 +46,7 @@ export class ElectronNativeEventManager {
   private _appActivateSubject = new Subject<void>();
   private _appWillQuitSubject = new Subject<void>();
   private _appQuitSubject = new Subject<void>();
+  private _appSecondInstanceSubject = new Subject<{ argv: string[]; cwd: string }>();
 
   // 公共 Observable 流
   public readonly appReady$ = this._appReadySubject.asObservable().pipe(share());
@@ -50,6 +55,7 @@ export class ElectronNativeEventManager {
   public readonly appActivate$ = this._appActivateSubject.asObservable().pipe(share());
   public readonly appWillQuit$ = this._appWillQuitSubject.asObservable().pipe(share());
   public readonly appQuit$ = this._appQuitSubject.asObservable().pipe(share());
+  public readonly appSecondInstance$ = this._appSecondInstanceSubject.asObservable().pipe(share());
 
   /**
    * 合并的所有应用事件流
@@ -61,6 +67,7 @@ export class ElectronNativeEventManager {
     this.appActivate$.pipe(map(payload => ({ type: 'app:activate' as const, payload, timestamp: Date.now() }))),
     this.appWillQuit$.pipe(map(payload => ({ type: 'app:will-quit' as const, payload, timestamp: Date.now() }))),
     this.appQuit$.pipe(map(payload => ({ type: 'app:quit' as const, payload, timestamp: Date.now() }))),
+    this.appSecondInstance$.pipe(map(payload => ({ type: 'app:second-instance' as const, payload, timestamp: Date.now() }))),
   ).pipe(share());
 
   /**
@@ -139,6 +146,7 @@ export class ElectronNativeEventManager {
     this._appActivateSubject.complete();
     this._appWillQuitSubject.complete();
     this._appQuitSubject.complete();
+    this._appSecondInstanceSubject.complete();
 
     this._isInitialized = false;
 
@@ -149,6 +157,19 @@ export class ElectronNativeEventManager {
    * 设置应用原生事件监听器
    */
   private _setupAppEvents(): void {
+    // 应用单实例锁，防止启动多个实例
+    const gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
+      logger.warn('ElectronNativeEventManager', '检测到已有应用实例，当前进程将退出');
+      app.quit();
+      return;
+    }
+
+    // 监听二次实例事件，将焦点交给已存在窗口
+    app.on('second-instance', (_event, argv, workingDirectory) => {
+      logger.info('ElectronNativeEventManager', '收到 second-instance 事件');
+      this._appSecondInstanceSubject.next({ argv: Array.isArray(argv) ? [...argv] : [], cwd: String(workingDirectory || '') });
+    });
     // 应用准备就绪
     app.whenReady().then(() => {
       logger.info('ElectronNativeEventManager', '应用准备就绪');

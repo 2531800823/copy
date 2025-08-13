@@ -55,7 +55,6 @@ class TrayService {
     @inject(EnumServiceKey.MainApplication)
     private MainApplication: MainApplication,
   ) {
-    console.log('🚀 liu123 ~ this.MainApplication.getAppEventManager():', this.MainApplication.getAppEventManager());
     this.MainApplication.getAppEventManager().appReady$.subscribe(() => {
       this.init()
     });

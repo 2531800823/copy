@@ -173,6 +173,25 @@ export class MainApplication {
       }),
     )
 
+    // 二次实例事件：确保窗口单例并聚焦现有窗口
+    this._subscriptions.add(
+      this._nativeEventManager.appSecondInstance$.subscribe(async ({ argv, cwd }) => {
+        logger.info('MainApplication', '检测到二次实例启动，尝试聚焦已有主窗口');
+        if (this._mainWindow && !this._mainWindow.isDestroyed()) {
+          if (this._mainWindow.isMinimized()) {
+            this._mainWindow.restore();
+          }
+          this._mainWindow.focus();
+          if (!this._mainWindow.isVisible()) {
+            this._mainWindow.show();
+          }
+        }
+        else {
+          await this._createMainWindow();
+        }
+      }),
+    )
+
     // 演示使用防抖的应用事件流（防止事件过于频繁）
     this._subscriptions.add(
       this._nativeEventManager
@@ -226,6 +245,8 @@ export class MainApplication {
 
     // 初始化自动更新
     this.getService(EnumServiceKey.AutoUpdaterService).init();
+
+    this.getService(EnumServiceKey.CustomEventService).createMainWin$.next();
 
     logger.info('MainApplication', '应用准备就绪处理完成');
   }
@@ -288,9 +309,6 @@ export class MainApplication {
     this._mainWindow = new BrowserWindow(windowOptions);
 
     windowStateManager.start(this._mainWindow);
-
-    // 初始化 IPC 通信
-    initIpcMain(this._mainWindow);
 
     // 开始跟踪窗口状态
     // this._windowStateManager.track(this._mainWindow);

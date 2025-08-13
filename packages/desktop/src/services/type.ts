@@ -6,4 +6,7 @@ export enum EnumServiceKey {
   Config = 'Config',
   AutoUpdaterService = 'AutoUpdaterService',
   TrayService = 'TrayService',
+  IPCMainService = 'IPCMainService',
+  CustomEventService = 'CustomEventService',
+  AutoLaunchService = 'AutoLaunchService',
 }
