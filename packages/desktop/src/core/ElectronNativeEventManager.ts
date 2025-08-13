@@ -104,6 +104,7 @@ export class ElectronNativeEventManager {
       'app:activate': this.appActivate$,
       'app:will-quit': this.appWillQuit$,
       'app:quit': this.appQuit$,
+      'app:second-instance': this.appSecondInstance$,
     };
 
     return streamMap[eventType] || EMPTY;
