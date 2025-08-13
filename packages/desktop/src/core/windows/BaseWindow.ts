@@ -1,14 +1,14 @@
-import {BrowserWindow} from 'electron';
-import path from 'path';
+import path from 'node:path';
+import { BrowserWindow } from 'electron';
 
 export abstract class BaseWindow {
-  protected browserWindow: BrowserWindow | null = null;
-  protected abstract width: number;
-  protected abstract height: number;
-  protected abstract htmlFile: string;
+  protected browserWindow: BrowserWindow | null = null
+  protected abstract width: number
+  protected abstract height: number
+  protected abstract htmlFile: string
 
   constructor() {
-    this.create();
+    this.create()
   }
 
   private create() {
@@ -20,20 +20,21 @@ export abstract class BaseWindow {
         contextIsolation: true,
         nodeIntegration: false,
       },
-    });
+    })
 
     if (process.env.NODE_ENV === 'development') {
-      this.browserWindow.loadURL('http://localhost:3000');
-    } else {
-      this.browserWindow.loadFile(this.htmlFile);
+      this.browserWindow.loadURL('http://localhost:3000')
+    }
+    else {
+      this.browserWindow.loadFile(this.htmlFile)
     }
 
     this.browserWindow.on('closed', () => {
-      this.browserWindow = null;
+      this.browserWindow = null
     });
   }
 
   public getWindow() {
-    return this.browserWindow;
+    return this.browserWindow
   }
 }

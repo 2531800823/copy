@@ -4,4 +4,6 @@ export enum EnumServiceKey {
   ProtocolService = 'ProtocolService',
   MainApplication = 'MainApplication',
   Config = 'Config',
+  AutoUpdaterService = 'AutoUpdaterService',
+  TrayService = 'TrayService',
 }

@@ -1,16 +1,16 @@
-import type {Configuration} from 'log4js';
-import path from 'node:path';
-import {dataPath} from '../common/path';
+import type { Configuration } from 'log4js'
+import path from 'node:path'
+import { dataPath } from '../common/path'
 
 const defaultLogConfig = {
   type: 'dateFile',
-  filename: dataPath + '/log/app.log',
+  filename: `${dataPath}/log/app.log`,
   keepFileExt: true,
   compress: true,
   daysToKeep: 7,
   backups: 10,
   maxLogSize: 1000 * 1000 * 10, // 10 MB
-};
+}
 
 /**
  * 获取日志文件保存路径
@@ -18,14 +18,14 @@ const defaultLogConfig = {
  */
 export function getLogPath(): string {
   // 获取用户数据目录
-  return path.join(dataPath, 'logs');
+  return path.join(dataPath, 'logs')
 }
 
 /**
  * 日志配置
  */
 export function getLogConfig(): Configuration {
-  const logPath = getLogPath();
+  const logPath = getLogPath()
 
   return {
     appenders: {
@@ -60,5 +60,5 @@ export function getLogConfig(): Configuration {
         level: 'debug',
       },
     },
-  };
+  }
 }

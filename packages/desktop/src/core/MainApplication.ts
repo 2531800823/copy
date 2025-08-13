@@ -1,20 +1,17 @@
-import type {Container} from 'inversify';
-import type {Subscription} from 'rxjs';
-import type {PartialConfig} from '@/common/config';
-import type {ServiceInstanceMapping, ServiceMapping} from '@/services';
-import path from 'node:path';
-import {BrowserWindow, Menu} from 'electron';
-import {debounceTime, filter} from 'rxjs/operators';
-// import type {WindowStateManager} from './WindowStateManager';
-import {EnumServiceKey} from '@/services/type';
+import type { Container } from 'inversify';
+import type { Subscription } from 'rxjs';
+import type { PartialConfig } from '@/common/config';
+import type { ServiceInstanceMapping, ServiceMapping } from '@/services';
+import { BrowserWindow, Menu } from 'electron';
+import { debounceTime, filter } from 'rxjs/operators';
+import { isDev, preloadPath } from '@/common';
+import { EnumServiceKey } from '@/services/type';
 import initIpcMain from '../ipcMain';
 import logger from '../services/LoggerService';
-import {setupAutoUpdater} from '../update';
-import {Config} from './Config';
-import {initServices} from './container';
-import {ElectronNativeEventManager} from './ElectronNativeEventManager';
-import {WindowManager} from './WindowManager';
-import { isDev, preloadPath } from '@/common';
+import { Config } from './Config';
+import { initRegisterServices } from './container';
+import { ElectronNativeEventManager } from './ElectronNativeEventManager';
+import { WindowManager } from './WindowManager';
 
 /**
  * 主应用类
@@ -30,8 +27,6 @@ export class MainApplication {
 
   // 核心管理器实例
   private _nativeEventManager = new ElectronNativeEventManager();
-  // private _windowStateManager = new WindowStateManager();
-  // private _protocolManager = new ProtocolService();
   private _windowManager = WindowManager.getInstance();
 
   /**
@@ -46,13 +41,13 @@ export class MainApplication {
   }
 
   getService<T extends keyof ServiceMapping>(
-    key: T
+    key: T,
   ): ServiceInstanceMapping[T] {
     return this._container.get(key);
   }
 
   initContainer() {
-    this._container = initServices(this);
+    this._container = initRegisterServices(this);
   }
 
   /**
@@ -65,15 +60,14 @@ export class MainApplication {
     }
 
     try {
-      // 1. 初始化协议管理器（必须在 app ready 之前）
       this.getService(EnumServiceKey.ProtocolService).initialize();
 
-      // 2. 初始化 Electron 应用事件管理器
       await this._nativeEventManager.initialize();
 
       this._isInitialized = true;
       logger.info('MainApplication', '应用初始化完成');
-    } catch (error) {
+    }
+    catch (error) {
       logger.error('MainApplication', '应用初始化失败', error);
       throw error;
     }
@@ -99,7 +93,7 @@ export class MainApplication {
   public async stop(): Promise<this> {
     try {
       // 取消所有事件订阅
-      this._subscriptions.forEach((subscription) => subscription.unsubscribe());
+      this._subscriptions.forEach(subscription => subscription.unsubscribe());
       this._subscriptions.clear();
 
       // 清理应用事件管理器
@@ -110,7 +104,8 @@ export class MainApplication {
 
       this._isInitialized = false;
       logger.info('MainApplication', '应用已停止');
-    } catch (error) {
+    }
+    catch (error) {
       logger.error('MainApplication', '应用停止时出错', error);
     }
 
@@ -139,44 +134,44 @@ export class MainApplication {
     this._subscriptions.add(
       this._nativeEventManager.appReady$.subscribe(async () => {
         await this._onAppReady();
-      })
-    );
+      }),
+    )
 
     // 应用退出前的处理
     this._subscriptions.add(
       this._nativeEventManager.appBeforeQuit$.subscribe(async () => {
         await this._onBeforeQuit();
-      })
-    );
+      }),
+    )
 
     // 所有窗口关闭时的处理
     this._subscriptions.add(
       this._nativeEventManager.appWindowAllClosed$.subscribe(() => {
         this._mainWindow = null;
         logger.info('MainApplication', '所有窗口已关闭，主窗口引用已清空');
-      })
-    );
+      }),
+    )
 
     // 应用激活时的处理（主要用于 macOS）
     this._subscriptions.add(
       this._nativeEventManager.appActivate$.subscribe(async () => {
         await this._onActivate();
-      })
-    );
+      }),
+    )
 
     // 应用将要退出的处理
     this._subscriptions.add(
       this._nativeEventManager.appWillQuit$.subscribe(() => {
         logger.info('MainApplication', '应用将要退出');
-      })
-    );
+      }),
+    )
 
     // 应用已退出的处理
     this._subscriptions.add(
       this._nativeEventManager.appQuit$.subscribe(() => {
         logger.info('MainApplication', '应用已完全退出');
-      })
-    );
+      }),
+    )
 
     // 演示使用防抖的应用事件流（防止事件过于频繁）
     this._subscriptions.add(
@@ -186,8 +181,8 @@ export class MainApplication {
           logger.debug('MainApplication', `应用事件（防抖）: ${event.type}`, {
             timestamp: new Date(event.timestamp).toISOString(),
           });
-        })
-    );
+        }),
+    )
 
     // 演示使用过滤的应用事件流（只监听特定事件）
     this._subscriptions.add(
@@ -195,22 +190,22 @@ export class MainApplication {
         .getFilteredEventStream('app:ready', 'app:before-quit', 'app:quit')
         .subscribe((event) => {
           logger.info('MainApplication', `重要应用事件: ${event.type}`);
-        })
-    );
+        }),
+    )
 
     // 监听所有应用事件进行调试
     this._subscriptions.add(
       this._nativeEventManager.allAppEvents$
         .pipe(
-          filter((event) => event.type.startsWith('app:')), // 确保只处理应用事件
-          debounceTime(50) // 轻微防抖以避免日志过多
+          filter(event => event.type.startsWith('app:')), // 确保只处理应用事件
+          debounceTime(50), // 轻微防抖以避免日志过多
         )
         .subscribe((event) => {
           logger.debug('MainApplication', `应用事件: ${event.type}`, {
             timestamp: new Date(event.timestamp).toISOString(),
           });
-        })
-    );
+        }),
+    )
 
     logger.info('MainApplication', 'RxJS 应用事件订阅已设置');
   }
@@ -230,7 +225,7 @@ export class MainApplication {
     this.getService(EnumServiceKey.WindowStateManager).start(this._mainWindow);
 
     // 初始化自动更新
-    setupAutoUpdater();
+    this.getService(EnumServiceKey.AutoUpdaterService).init();
 
     logger.info('MainApplication', '应用准备就绪处理完成');
   }
@@ -258,15 +253,15 @@ export class MainApplication {
   private async _createMainWindow(): Promise<void> {
     if (this._mainWindow && !this._mainWindow.isDestroyed()) {
       this._mainWindow.focus();
-      return;
+      return
     }
 
     logger.info('MainApplication', '正在创建主窗口');
 
     // 获取窗口状态
     const windowStateManager = this.getService(
-      EnumServiceKey.WindowStateManager
-    );
+      EnumServiceKey.WindowStateManager,
+    )
     const windowState = windowStateManager.getSavedState();
 
     const windowConfig = this._config.get('window');
@@ -285,7 +280,7 @@ export class MainApplication {
       },
       // 设置窗口位置
       ...(windowState.x !== undefined && windowState.y !== undefined
-        ? {x: windowState.x, y: windowState.y}
+        ? { x: windowState.x, y: windowState.y }
         : {}),
     };
 
@@ -312,10 +307,10 @@ export class MainApplication {
     this._mainWindow.on('closed', () => {
       logger.info(
         'MainApplication',
-        `窗口已关闭 (ID: ${this._mainWindow?.id})`
-      );
+        `窗口已关闭 (ID: ${this._mainWindow?.id})`,
+      )
       this._mainWindow = null;
-    });
+    })
 
     // 加载页面
     await this._loadWindow();
@@ -327,7 +322,8 @@ export class MainApplication {
    * 加载窗口页面
    */
   private async _loadWindow(): Promise<void> {
-    if (!this._mainWindow) return;
+    if (!this._mainWindow)
+      return;
 
     try {
       if (isDev) {
@@ -340,7 +336,8 @@ export class MainApplication {
         if (isDev) {
           this._mainWindow.webContents.openDevTools();
         }
-      } else {
+      }
+      else {
         // 生产环境
         const appUrl = this._config.get('appUrl');
         logger.info('MainApplication', `加载生产环境URL: ${appUrl}`);
@@ -349,13 +346,14 @@ export class MainApplication {
       }
 
       logger.info('MainApplication', '页面加载完成');
-    } catch (error) {
+    }
+    catch (error) {
       logger.error('MainApplication', '页面加载失败', error);
 
       // 打开开发者工具帮助调试
       if (
-        this._mainWindow &&
-        !this._mainWindow.webContents.isDevToolsOpened()
+        this._mainWindow
+        && !this._mainWindow.webContents.isDevToolsOpened()
       ) {
         this._mainWindow.webContents.openDevTools();
       }
