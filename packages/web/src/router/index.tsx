@@ -1,14 +1,15 @@
 import React from 'react';
-import {createHashRouter} from 'react-router-dom';
+import {createBrowserRouter} from 'react-router-dom';
 import AboutPage from '../pages/AboutPage';
 import HomePage from '../pages/HomePage';
 import SettingsPage from '../pages/SettingsPage';
+import UserManagement from '@/components/UserManagement';
 
 /**
  * 路由配置定义
- * 在电子应用中使用HashRouter，在浏览器中使用BrowserRouter
+ * 使用BrowserRouter实现浏览器历史记录模式路由
  */
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: '/',
     element: <HomePage />,
@@ -20,6 +21,10 @@ const router = createHashRouter([
   {
     path: '/settings',
     element: <SettingsPage />,
+  },
+  {
+    path: '/user',
+    element: <UserManagement />,
   },
 ]);
 export default router;

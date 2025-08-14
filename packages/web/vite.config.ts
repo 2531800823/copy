@@ -8,6 +8,14 @@ export default defineConfig({
   base: './',
   server: {
     port: 7010,
+    /** 配置代理，解决跨域问题 */
+    proxy: {
+      '/api': {
+        target: 'http://localhost:7011',
+        changeOrigin: true,
+        // rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   resolve: {
     alias: {

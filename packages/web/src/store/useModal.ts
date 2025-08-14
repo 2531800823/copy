@@ -42,6 +42,7 @@ const initialState: ModalState = {
   jsonViewerModal: {...v},
   textModal: {...v},
   importJsonModal: {...v},
+  
 };
 
 /**

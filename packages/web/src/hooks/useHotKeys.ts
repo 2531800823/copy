@@ -11,6 +11,7 @@ function useHotKeys() {
   const {
     textModal,
     jsonViewerModal,
+    
     editorTagModal,
     setEditorTagModal,
     setJsonViewerModal,
@@ -39,3 +40,4 @@ function useHotKeys() {
   });
 }
 export default useHotKeys;
+  

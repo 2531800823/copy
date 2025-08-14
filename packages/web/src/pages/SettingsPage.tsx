@@ -8,11 +8,14 @@ import useSettingStore, {EnumCountSort} from '../store/useSetting';
 import {clearAllBackups} from '../utils/clean';
 import {handleExportJSON} from '../utils/exportFile';
 import styles from './SettingsPage.module.less';
+import useModalStore from '@/store/useModal';
 /**
  * 设置页面组件
  */
 const SettingsPage: React.FC = () => {
   const {cards, tags} = useCardStore();
+
+  const {setImportJsonModal} = useModalStore();
 
   // 自启动状态
   const [autoLaunch, setAutoLaunch] = useState(false);
@@ -109,7 +112,9 @@ const SettingsPage: React.FC = () => {
           <Button
             type="primary"
             onClick={() => {
-              setImportJsonVisible(true);
+              setImportJsonModal({
+                visible: true,
+              });
             }}
             className={styles.actionButton}>
             导入文件

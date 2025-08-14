@@ -14,6 +14,7 @@ import styles from './HomePage.module.less';
 import useCardStore from '../store/useCardStore';
 import useModalStore from '../store/useModal';
 import {useSelector} from '@/hooks/useSelector';
+import UserManagement from '@/components/UserManagement';
 
 /**
  * 主页面组件
