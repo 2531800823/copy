@@ -1,6 +1,6 @@
-import { isDev } from ".";
+import {isDev} from '.';
 
-export const PROTOCOL = 'liuCopy';
+export const PROTOCOL = 'liucopy';
 
 export const HOST = isDev ? 'localhost:7010' : 'liu.com';
 
@@ -10,6 +10,6 @@ export const pathRouter = ['app'];
 
 export function isPathRouter(path: string) {
   return pathRouter.some((item) => {
-    return path.startsWith(item);
+    return path.includes(item);
   });
 }

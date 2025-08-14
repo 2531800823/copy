@@ -1,10 +1,11 @@
-import type { BrowserWindow } from 'electron';
-import type { WindowState } from './store';
+import type {BrowserWindow} from 'electron';
+import type {WindowState} from './store';
 import type StoreManager from './store/storeManager';
-import { inject, injectable } from 'inversify';
+import {inject, injectable} from 'inversify';
 import logger from './LoggerService';
-import { EnumStoreKey } from './store';
-import { EnumServiceKey } from './type';
+import {EnumStoreKey} from './store';
+import {EnumServiceKey} from './type';
+import {debounce} from 'lodash-es';
 
 /**
  * 窗口状态管理器
@@ -22,7 +23,7 @@ export class WindowStateManager {
    */
   constructor(
     @inject(EnumServiceKey.StoreManager) private storeManager: StoreManager,
-    defaultState: WindowState = {},
+    defaultState: WindowState = {}
   ) {
     this._defaultState = {
       width: 800,
@@ -91,7 +92,7 @@ export class WindowStateManager {
     const isMaximized = this._window.isMaximized();
 
     if (isMaximized) {
-      return { isMaximized }
+      return {isMaximized};
     }
 
     const bounds = this._window.getBounds();
@@ -138,14 +139,12 @@ export class WindowStateManager {
       // 设置最大化状态
       if (state.isMaximized) {
         this._window.maximize();
-      }
-      else if (this._window.isMaximized()) {
+      } else if (this._window.isMaximized()) {
         this._window.unmaximize();
       }
 
       logger.debug('WindowStateManager', '窗口状态已应用', state);
-    }
-    catch (error) {
+    } catch (error) {
       logger.error('WindowStateManager', '应用窗口状态失败', error);
     }
 
@@ -177,12 +176,14 @@ export class WindowStateManager {
    * 设置事件监听器
    */
   private _setupEventListeners(): void {
-    if (!this._window)
-      return;
+    if (!this._window) return;
 
     // 监听窗口大小和位置变化
-    this._window.on('resize', this._handleWindowChange.bind(this));
-    this._window.on('move', this._handleWindowChange.bind(this));
+    this._window.on(
+      'resize',
+      debounce(this._handleWindowChange.bind(this), 500)
+    );
+    this._window.on('move', debounce(this._handleWindowChange.bind(this), 500));
 
     // 监听窗口最大化和还原事件
     this._window.on('maximize', this._handleMaximize.bind(this));
@@ -196,8 +197,7 @@ export class WindowStateManager {
    * 移除事件监听器
    */
   private _removeEventListeners(): void {
-    if (!this._window)
-      return;
+    if (!this._window) return;
 
     this._window.removeAllListeners('resize');
     this._window.removeAllListeners('move');
@@ -219,7 +219,7 @@ export class WindowStateManager {
    * 处理窗口最大化事件
    */
   private _handleMaximize(): void {
-    this._saveState({ isMaximized: true });
+    this._saveState({isMaximized: true});
     logger.debug('WindowStateManager', '窗口已最大化');
   }
 
@@ -255,8 +255,7 @@ export class WindowStateManager {
     try {
       this.storeManager.set(EnumStoreKey.WINDOW, state);
       logger.debug('WindowStateManager', '窗口状态已保存', state);
-    }
-    catch (error) {
+    } catch (error) {
       logger.error('WindowStateManager', '保存窗口状态失败', error);
     }
   }

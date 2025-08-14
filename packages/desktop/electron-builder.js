@@ -7,7 +7,7 @@ module.exports = {
   asar: true,
   productName: 'CopyApp',
   directories: {
-    // eslint-disable-next-line no-template-curly-in-string
+     
     output: 'release/${version}',
   },
   files: ['dist', 'dist-electron', 'build/icons/png/32x32.png'],
@@ -23,20 +23,21 @@ module.exports = {
       filter: ['**/*'],
     },
   ],
-  extraFiles: [
-    {
-      from: '../web/dist/',
-      to: 'resources/web/dist',
-      filter: ['**/*'],
-    },
-  ],
+  // 移除extraFiles配置，避免重复复制
+  // extraFiles: [
+  //   {
+  //     from: '../web/dist/',
+  //     to: 'resources/web/dist',
+  //     filter: ['**/*'],
+  //   },
+  // ],
   buildDependenciesFromSource: true,
   npmRebuild: false,
   forceCodeSigning: false,
   mac: {
     target: ['dmg'],
     icon: 'build/icons/mac/icon.icns',
-    // eslint-disable-next-line no-template-curly-in-string
+     
     artifactName: '${productName}-Mac-${version}.${ext}',
     category: 'public.app-category.productivity',
   },
@@ -48,7 +49,7 @@ module.exports = {
         arch: ['x64'],
       },
     ],
-    // eslint-disable-next-line no-template-curly-in-string
+     
     artifactName: '${productName}-Windows-${version}.${ext}',
     signingHashAlgorithms: null,
   },
@@ -64,7 +65,7 @@ module.exports = {
   linux: {
     target: ['AppImage'],
     icon: 'build/icons/png',
-    // eslint-disable-next-line no-template-curly-in-string
+     
     artifactName: '${productName}-Linux-${version}.${ext}',
     category: 'Utility',
   },

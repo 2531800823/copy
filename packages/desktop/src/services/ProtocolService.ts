@@ -96,19 +96,24 @@ export class ProtocolService {
       return this;
     }
 
-    if (!this._registeredProtocols.has('app')) {
+    if (!this._registeredProtocols.has(PROTOCOL)) {
       logger.error('ProtocolManager', 'app 协议未注册权限');
       return this;
     }
 
     try {
       const resourcePath = this.config.get('resourcePath');
-      this._validateResourcePath(resourcePath);
+      logger.info(
+        'ProtocolManager',
+        `开始设置协议处理器，资源路径: ${resourcePath}`
+      );
+
+      // this._validateResourcePath(resourcePath);
       this._registerAppProtocolHandler();
 
       logger.info(
         'ProtocolManager',
-        `app:// 协议处理器已设置，资源路径: ${resourcePath}`
+        `${PROTOCOL}:// 协议处理器已设置，资源路径: ${resourcePath}`
       );
     } catch (error) {
       logger.error('ProtocolManager', '设置 app:// 协议处理器失败', error);
@@ -138,7 +143,7 @@ export class ProtocolService {
   private _registerDefaultProtocols(): void {
     // 注册 app 协议权限
     this.registerProtocolPrivileges({
-      scheme: 'app',
+      scheme: PROTOCOL,
       privileges: {
         secure: true,
         standard: true,
@@ -149,97 +154,52 @@ export class ProtocolService {
   }
 
   /**
-   * 验证资源路径
-   * @param resourcePath 资源路径
-   */
-  private _validateResourcePath(resourcePath: string): void {
-    logger.info('ProtocolManager', `验证资源路径: ${resourcePath}`);
-    logger.info('ProtocolManager', `应用执行路径: ${app.getPath('exe')}`);
-    logger.info('ProtocolManager', `应用根目录: ${app.getAppPath()}`);
-
-    if (!fs.existsSync(resourcePath)) {
-      logger.error('ProtocolManager', `资源目录不存在: ${resourcePath}`);
-      this._tryFindAlternativePaths(resourcePath);
-      throw new Error(`资源目录不存在: ${resourcePath}`);
-    }
-
-    // 检查 index.html 是否存在
-    const indexPath = path.join(resourcePath, 'index.html');
-    if (!fs.existsSync(indexPath)) {
-      logger.error('ProtocolManager', `index.html 不存在: ${indexPath}`);
-      throw new Error(`index.html 不存在: ${indexPath}`);
-    }
-
-    // 列出目录内容用于调试
-    try {
-      const files = fs.readdirSync(resourcePath);
-      logger.debug('ProtocolManager', `资源目录内容: ${files.join(', ')}`);
-    } catch (error) {
-      logger.warn('ProtocolManager', '无法读取资源目录内容', error);
-    }
-  }
-
-  /**
-   * 尝试查找备选路径
-   * @param originalPath 原始路径
-   */
-  private _tryFindAlternativePaths(originalPath: string): void {
-    const alternativePaths = [
-      path.join(app.getAppPath(), '../web/dist'),
-      path.join(app.getPath('exe'), '../resources/web/dist'),
-      path.join(app.getPath('exe'), '../resources/app.asar/dist'),
-      path.join(app.getPath('userData'), '../web/dist'),
-    ];
-
-    logger.info('ProtocolManager', '尝试查找备选目录...');
-
-    for (const altPath of alternativePaths) {
-      logger.debug('ProtocolManager', `检查备选目录: ${altPath}`);
-
-      if (fs.existsSync(altPath)) {
-        logger.info('ProtocolManager', `找到可用的备选目录: ${altPath}`);
-
-        try {
-          const files = fs.readdirSync(altPath);
-          logger.debug('ProtocolManager', `备选目录内容: ${files.join(', ')}`);
-        } catch (err) {
-          logger.error('ProtocolManager', `无法读取备选目录内容: ${err}`);
-        }
-      }
-    }
-  }
-
-  /**
    * 注册 app 协议处理器
    * @param resourcePath 资源路径
    */
   private _registerAppProtocolHandler(): void {
     const resourcePath = this.config.get('resourcePath');
-    protocol.handle(PROTOCOL, async (request) => {
-      console.log('🚀 liu123 ~ protocol.handle ~ 收到请求:', request.url);
 
+    logger.info(
+      'ProtocolManager',
+      `开始注册协议处理器，协议: ${PROTOCOL}，资源路径: ${resourcePath}`
+    );
+
+    protocol.handle(PROTOCOL, async (request) => {
+      logger.info('ProtocolManager', `🚀 协议处理器收到请求: ${request.url}`);
+
+      // 移除协议前缀，获取相对路径
       const urlWithoutScheme = request.url.replace(LOCATION, '');
 
+      console.log('🚀 liu123 ~ urlWithoutScheme:', urlWithoutScheme);
+      console.log("🚀 liu123 ~ resourcePath:", resourcePath)
       if (isPathRouter(urlWithoutScheme)) {
-        const filePath = path.join(resourcePath, 'index.html');
+        const filePath = path.join(resourcePath, './index.html');
         const data = fs.readFileSync(filePath);
-
-        // 根据文件类型设置正确的 Content-Type
         const contentType = getMimeType(filePath);
         console.log(
-          '🚀 liu123 ~ protocol.handle ~ 设置Content-Type:',
-          contentType
+          '🚀 liu123 ~ protocol.handle ~ 返回:',
+          JSON.stringify({
+            contentType,
+            filePath,
+            dataLength: data.length,
+          })
         );
 
-        // 创建响应对象
         const response = new Response(data, {
           headers: {
             'Content-Type': contentType,
             'Access-Control-Allow-Origin': '*',
           },
         });
+
+        logger.info(
+          'ProtocolManager',
+          `路由路径响应创建成功，数据长度: ${data.length}`
+        );
         return response;
       }
+
       try {
         // 获取URL中协议之后的部分，例如 'index.html' 或 'assets/index-BFFICt56.js'
         let url = urlWithoutScheme;
@@ -256,10 +216,7 @@ export class ProtocolService {
             data.length
           );
 
-          // 根据文件类型设置正确的 Content-Type
           const contentType = getMimeType(filePath);
-
-          // 创建响应对象
           const response = new Response(data, {
             headers: {
               'Content-Type': contentType,

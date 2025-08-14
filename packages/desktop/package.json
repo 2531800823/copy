@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "pnpm clean && chcp 65001 >nul 2>&1 && vite",
     "clean": "rimraf dist-electron",
-    "build": "tsc && vite build && electron-builder",
+    "build": "pnpm clean && tsc && vite build && electron-builder",
     "build:dir": "tsc && vite build && electron-builder --config ./electron-builder.js --dir",
     "build:win": "tsc && vite build && electron-builder --config ./electron-builder.js --win nsis",
     "build:mac": "tsc && vite build && electron-builder --mac",

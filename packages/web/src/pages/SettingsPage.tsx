@@ -1,14 +1,13 @@
 import {Button} from '@douyinfe/semi-ui';
+import {map} from 'lodash-es';
 import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
-import ImportJsonModal from '../components/Modal/ImportJsonModal/ImportJsonModal';
+import {hotKeys} from '../hooks/useHotKeys';
 import useCardStore from '../store/useCardStore';
 import useSettingStore, {EnumCountSort} from '../store/useSetting';
 import {clearAllBackups} from '../utils/clean';
 import {handleExportJSON} from '../utils/exportFile';
 import styles from './SettingsPage.module.less';
-import {map} from 'lodash-es';
-import {hotKeys} from '../hooks/useHotKeys';
 /**
  * 设置页面组件
  */
