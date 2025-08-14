@@ -1,23 +1,20 @@
 import {
   IconCode,
-  IconEdit,
   IconGridView,
   IconMoreStroked,
   IconPlus,
   IconSetting,
 } from '@douyinfe/semi-icons';
-import {IconForm} from '@douyinfe/semi-icons-lab';
 import {Button, Dropdown, Tooltip} from '@douyinfe/semi-ui';
 import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
 import CardList from '../components/CardList/CardList';
-import EditorTagModal from '../components/Modal/EditorTagModal/EditorTagModal';
-import JsonViewerModal from '../components/Modal/JsonViewerModal/JsonViewerModal';
-import TextModalModal from '../components/Modal/TextModal/TextModal';
 import {Tags} from '../components/Tags';
 import styles from './HomePage.module.less';
 import useCardStore from '../store/useCardStore';
 import useModalStore from '../store/useModal';
+import {useSelector} from '@/hooks/useSelector';
+import UserManagement from '@/components/UserManagement';
 
 /**
  * 主页面组件
@@ -35,11 +32,11 @@ const HomePage: React.FC = () => {
 
   const {setJsonViewerModal, setEditorTagModal, setTextModal} = useModalStore();
 
-  const {cards, tags} = useCardStore();
+  const {cards, tags} = useCardStore(useSelector(['cards', 'tags']));
 
   useEffect(() => {
-    console.log('🚀 liu123 ~ cards:', cards);
-    console.log('🚀 liu123 ~ tags:', tags);
+    console.log('🚀 liu123 ~ card111s:', cards);
+    console.log('🚀 liu123 ~ tags222:', tags);
   }, [cards, tags]);
 
   // 监听窗口大小变化
@@ -110,9 +107,6 @@ const HomePage: React.FC = () => {
     return (
       <>
         {/* 添加 文本 */}
-        <Tooltip content="打开json编辑器"></Tooltip>
-
-        {/* 添加 文本 */}
         <Tooltip content="添加 文本">
           <Button
             icon={<IconPlus />}
@@ -159,32 +153,34 @@ const HomePage: React.FC = () => {
         {/* 按钮组 */}
         <div className={styles.buttonGroup}>
           {isMobile ? (
-            <Dropdown
-              trigger="click"
-              position="bottomRight"
-              content={dropdownMenu}
-              visible={dropdownVisible}
-              onVisibleChange={setDropdownVisible}>
+            <>
               <Button
-                icon={<IconMoreStroked />}
+                icon={<IconPlus />}
                 theme="borderless"
                 type="tertiary"
-                aria-label="更多操作"
+                aria-label="添加 文本"
+                onClick={() => {
+                  setTextModal({visible: true});
+                }}
               />
-            </Dropdown>
+              <Dropdown
+                trigger="click"
+                position="bottomRight"
+                content={dropdownMenu}
+                visible={dropdownVisible}
+                onVisibleChange={setDropdownVisible}>
+                <Button
+                  icon={<IconMoreStroked />}
+                  theme="borderless"
+                  type="tertiary"
+                  aria-label="更多操作"
+                />
+              </Dropdown>
+            </>
           ) : (
             renderButtonGroup()
           )}
 
-          <Button
-            icon={<IconCode />}
-            theme="borderless"
-            type="tertiary"
-            aria-label="打开json编辑器"
-            onClick={() => {
-              setJsonViewerModal({visible: true});
-            }}
-          />
           <div
             onClick={() => {
               setTop((prev) => {

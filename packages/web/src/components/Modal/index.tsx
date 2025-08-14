@@ -4,6 +4,7 @@ import EditorTextModal from './EditorTextModal/EditorTextModal';
 import EditorTagModal from './EditorTagModal/EditorTagModal';
 import JsonViewerModal from './JsonViewerModal/JsonViewerModal';
 import useModalStore, {ModalState} from '../../store/useModal';
+import ImportJsonModal from './ImportJsonModal/ImportJsonModal';
 
 interface ModalManagerProps {}
 
@@ -20,6 +21,7 @@ const ModalManager: FC<ModalManagerProps> = (props) => {
     map.set('editorTextModal', EditorTextModal);
     map.set('editorTagModal', EditorTagModal);
     map.set('jsonViewerModal', JsonViewerModal);
+    map.set('importJsonModal', ImportJsonModal);
 
     return map;
   });
