@@ -22,3 +22,6 @@ dist
 
 **/dist-electron/**
 **/release/**
+
+.env
+**/.env

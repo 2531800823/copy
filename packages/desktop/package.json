@@ -1,6 +1,6 @@
 {
   "name": "desktop",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "private": true,
   "description": "Electron desktop application",
   "author": "2531800823@qq.com",
@@ -14,14 +14,21 @@
     "clean": "rimraf dist-electron",
     "build": "pnpm clean && tsc && vite build && electron-builder",
     "build:dir": "tsc && vite build && electron-builder --config ./electron-builder.js --dir",
-    "build:win": "tsc && vite build && electron-builder --config ./electron-builder.js --win nsis",
+    "build:win": "tsc && vite build && electron-builder --config ./electron-builder.js --win nsis && pnpm release",
     "build:mac": "tsc && vite build && electron-builder --mac",
     "build:linux": "tsc && vite build && electron-builder --linux",
     "publish": "tsc && vite build && electron-builder --publish always",
     "publish:win": "tsc && vite build && electron-builder --win --publish always",
     "publish:mac": "tsc && vite build && electron-builder --mac --publish always",
     "publish:linux": "tsc && vite build && electron-builder --linux --publish always",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "node scripts/update-github.js",
+    "release:draft": "node scripts/update-github.js --draft",
+    "release:prerelease": "node scripts/update-github.js --prerelease",
+    "test:env": "node scripts/test-env.js",
+    "fix:tag": "node scripts/fix-git-tag.js",
+    "fix:tag:delete": "node scripts/fix-git-tag.js --delete",
+    "check:permissions": "node scripts/check-permissions.js"
   },
   "dependencies": {
     "electron-store": "10.0.1",
@@ -34,6 +41,7 @@
     "rxjs": "7.8.1"
   },
   "devDependencies": {
+    "@octokit/rest": "21.1.1",
     "@types/lodash-es": "4.17.12",
     "electron": "35.1.5",
     "electron-builder": "25.1.8",
