@@ -7,7 +7,7 @@ import {
 } from '@douyinfe/semi-icons';
 import {Button, Dropdown, Tooltip} from '@douyinfe/semi-ui';
 import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import CardList from '../components/CardList/CardList';
 import {Tags} from '../components/Tags';
 import styles from './HomePage.module.less';
@@ -20,6 +20,7 @@ import UserManagement from '@/components/UserManagement';
  * 主页面组件
  */
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const [textVisible, setTextVisible] = useState(false);
 
   const [isMobile, setIsMobile] = useState(false);
@@ -92,7 +93,7 @@ const HomePage: React.FC = () => {
         icon={<IconSetting />}
         onClick={() =>
           handleMenuItemClick(() => {
-            window.location.href = '/#/settings';
+            navigate('/settings');
           })
         }>
         设置
