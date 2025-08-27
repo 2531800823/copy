@@ -67,6 +67,9 @@ jobs:
       - name: 构建桌面应用
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 设置超时和重试策略
+          ELECTRON_BUILDER_CACHE: false
+          DEBUG: electron-builder
         run: |
           cd packages/desktop
           # 设置版本号
@@ -87,15 +90,16 @@ jobs:
             sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" package.json
           fi
 
-          # 构建应用
+          # 构建应用（不发布，只构建）
           if [ "${{ runner.os }}" = "Windows" ]; then
-            pnpm publish:win
+            pnpm build:win
           elif [ "${{ runner.os }}" = "macOS" ]; then
-            pnpm publish:mac
+            pnpm build:mac
           else
-            pnpm publish:linux
+            pnpm build:linux
           fi
         shell: bash
+        timeout-minutes: 60
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
@@ -128,8 +132,23 @@ jobs:
         with:
           path: artifacts
 
+      - name: 整理发布文件
+        run: |
+          # 创建发布目录
+          mkdir -p release-files
+          # 复制所有构建产物到发布目录
+          find artifacts -name "*.exe" -exec cp {} release-files/ \;
+          find artifacts -name "*.dmg" -exec cp {} release-files/ \;
+          find artifacts -name "*.AppImage" -exec cp {} release-files/ \;
+          find artifacts -name "*.deb" -exec cp {} release-files/ \;
+          find artifacts -name "*.rpm" -exec cp {} release-files/ \;
+          find artifacts -name "*.yml" -exec cp {} release-files/ \;
+          # 显示要发布的文件
+          echo "=== 发布文件列表 ==="
+          ls -la release-files/
+
       - name: 创建发布
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -137,17 +156,25 @@ jobs:
           name: CopyApp ${{ github.event.inputs.version || github.ref_name }}
           draft: false
           prerelease: false
-          files: artifacts/**/*
+          files: release-files/*
+          fail_on_unmatched_files: false
           body: |
             # CopyApp 发布版本 ${{ github.event.inputs.version || github.ref_name }}
-
+            
+            ## 更新内容
+            - 优化构建流程
+            - 提升应用稳定性
+            
             ## 下载说明
 
             ### Windows 用户
             下载 `CopyApp-Windows-*.exe` 安装文件
 
-            ### macOS 用户
+            ### macOS 用户  
             下载 `CopyApp-Mac-*.dmg` 安装文件
 
             ### Linux 用户
             下载 `CopyApp-Linux-*.AppImage` 文件
+            
+            ## 自动更新
+            应用支持自动更新，首次安装后会自动检查更新。

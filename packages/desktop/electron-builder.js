@@ -69,16 +69,18 @@ module.exports = {
     artifactName: '${productName}-Linux-${version}.${ext}',
     category: 'Utility',
   },
-  publish: [
-    {
-      provider: 'github',
-      owner: '2531800823',
-      repo: 'copy',
-      releaseType: 'release',
-      private: false,
-      publishAutoUpdate: true,
-    },
-  ],
+  // 移除 publish 配置，避免构建时自动发布导致卡住
+  // publish 将在 GitHub Actions 中单独处理
+  // publish: [
+  //   {
+  //     provider: 'github',
+  //     owner: '2531800823', 
+  //     repo: 'copy',
+  //     releaseType: 'release',
+  //     private: false,
+  //     publishAutoUpdate: true,
+  //   },
+  // ],
   generateUpdatesFilesForAllChannels: true,
   asarUnpack: [],
 };
