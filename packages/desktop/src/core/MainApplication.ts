@@ -135,8 +135,8 @@ export class MainApplication {
     this._subscriptions.add(
       this._nativeEventManager.appReady$.subscribe(async () => {
         await this._onAppReady();
-      }),
-    )
+      })
+    );
 
     // 应用退出前的处理
     this._subscriptions.add(
@@ -338,6 +338,23 @@ export class MainApplication {
         `窗口已关闭 (ID: ${this._mainWindow?.id})`
       );
       this._mainWindow = null;
+    });
+
+    // 设置窗口关闭前事件，实现点击关闭按钮时最小化而不是关闭
+    this._mainWindow.on('close', (event) => {
+      // 阻止默认的关闭行为
+      event.preventDefault();
+
+      logger.info(
+        'MainApplication',
+        `用户点击关闭按钮，执行最小化操作 (ID: ${this._mainWindow?.id})`
+      );
+
+      // 最小化窗口而不是关闭
+      this._mainWindow?.minimize();
+
+      // 可选：隐藏到系统托盘
+      // this._mainWindow?.hide();
     });
 
     // 加载页面

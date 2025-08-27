@@ -94,13 +94,32 @@ class TrayService {
     this.tray?.on('click', () => {
       if (win) {
         if (win.isVisible()) {
+          // 如果窗口可见，点击托盘图标隐藏窗口
           win.hide();
+          logger.info('Tray', '点击托盘图标，隐藏窗口');
         } else {
+          // 如果窗口隐藏，点击托盘图标显示窗口
           win.show();
           win.focus();
+          logger.info('Tray', '点击托盘图标，显示并聚焦窗口');
         }
       }
     });
+
+    // 监听窗口关闭事件，确保托盘图标正确显示
+    if (win) {
+      win.on('close', (event) => {
+        // 阻止默认的关闭行为
+        event.preventDefault();
+
+        logger.info('Tray', '用户点击关闭按钮，执行隐藏操作');
+
+        // 隐藏窗口而不是关闭
+        if (win && !win.isDestroyed()) {
+          win.hide();
+        }
+      });
+    }
   }
 
   createContextMenu() {
@@ -154,7 +173,8 @@ class TrayService {
         label: '退出',
         click: () => {
           logger.info('退出');
-          app.quit();
+          // 直接退出应用，绕过窗口的 close 事件
+          app.exit(0);
         },
       },
     ]);

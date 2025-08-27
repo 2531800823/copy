@@ -10,6 +10,8 @@ export interface ApplicationConfig {
     height: number;
     autoHideMenuBar: boolean;
     frame: boolean;
+    /** 关闭按钮行为 */
+    closeButtonBehavior: 'minimize' | 'hide' | 'quit';
   };
   appUrl: string;
   resourcePath: string;
@@ -35,9 +37,10 @@ export const defaultConfig: ApplicationConfig = {
     height: 600,
     autoHideMenuBar: true,
     frame: true,
+    closeButtonBehavior: 'hide',
   },
   appUrl: isDev
-    ? process.env.VITE_WEB_URL || 'http://localhost:7010'
+    ? process.env.VITE_WEB_URL || 'http://localhost:7010/app'
     : `${LOCATION}/app`,
   resourcePath: getResourcePath(),
 };
