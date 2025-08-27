@@ -1,6 +1,7 @@
 import { AutoLaunchService } from './AutoLaunchService'
 import { AutoUpdaterService } from './AutoUpdaterService';
 import { CustomEventService } from './CustomEventService'
+import { HotkeyService } from './HotkeyService'
 import { IPCMainService } from './IPCMainService'
 import { ProtocolService } from './ProtocolService'
 import StoreManager from './store/storeManager'
@@ -17,6 +18,7 @@ export const containerServices = {
   [EnumServiceKey.IPCMainService]: IPCMainService,
   [EnumServiceKey.CustomEventService]: CustomEventService,
   [EnumServiceKey.AutoLaunchService]: AutoLaunchService,
+  [EnumServiceKey.HotkeyService]: HotkeyService,
 }
 
 export type ServiceMapping = typeof containerServices

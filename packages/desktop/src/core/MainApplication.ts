@@ -101,6 +101,9 @@ export class MainApplication {
       // 重置协议管理器
       this.getService(EnumServiceKey.ProtocolService).reset();
 
+      // 清理快捷键服务
+      this.getService(EnumServiceKey.HotkeyService).cleanup();
+
       this._isInitialized = false;
       logger.info('MainApplication', '应用已停止');
     } catch (error) {
@@ -249,6 +252,9 @@ export class MainApplication {
 
     // 初始化自动更新
     this.getService(EnumServiceKey.AutoUpdaterService).init();
+
+    // 初始化快捷键服务（必须在 app ready 之后）
+    this.getService(EnumServiceKey.HotkeyService).initialize();
 
     this.getService(EnumServiceKey.CustomEventService).createMainWin$.next();
 

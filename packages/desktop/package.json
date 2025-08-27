@@ -8,7 +8,6 @@
     "type": "git",
     "url": "https://github.com/2531800823/copy.git"
   },
-  "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "pnpm clean && chcp 65001 >nul 2>&1 && vite",

@@ -171,13 +171,13 @@ export class ProtocolService {
       // 移除协议前缀，获取相对路径
       const urlWithoutScheme = request.url.replace(LOCATION, '');
 
-      console.log('🚀 liu123 ~ urlWithoutScheme:', urlWithoutScheme);
-      console.log("🚀 liu123 ~ resourcePath:", resourcePath)
+      logger.info('🚀 liu123 ~ urlWithoutScheme:', urlWithoutScheme);
+      logger.info("🚀 liu123 ~ resourcePath:", resourcePath)
       if (isPathRouter(urlWithoutScheme)) {
-        const filePath = path.join(resourcePath, './index.html');
+        const filePath = path.join(resourcePath, 'index.html');
         const data = fs.readFileSync(filePath);
         const contentType = getMimeType(filePath);
-        console.log(
+        logger.info(
           '🚀 liu123 ~ protocol.handle ~ 返回:',
           JSON.stringify({
             contentType,
@@ -211,7 +211,7 @@ export class ProtocolService {
         if (fs.existsSync(filePath)) {
           // 使用同步读取，因为 protocol.handle 需要同步返回
           const data = fs.readFileSync(filePath);
-          console.log(
+          logger.info(
             '🚀 liu123 ~ protocol.handle ~ 文件读取成功，数据长度:',
             data.length
           );

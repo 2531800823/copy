@@ -7,7 +7,8 @@ import UserManagement from '@/components/UserManagement';
 
 /**
  * 路由配置定义
- * 使用BrowserRouter实现浏览器历史记录模式路由
+ * 使用BrowserRouter实现浏览器模式路由，配合Electron协议使用
+ * basename设置为/app，这样根路径/就会匹配到HomePage
  */
 const router = createBrowserRouter([
   {
@@ -26,5 +27,8 @@ const router = createBrowserRouter([
     path: '/user',
     element: <UserManagement />,
   },
-]);
+], {
+  basename: '/app'
+});
+
 export default router;

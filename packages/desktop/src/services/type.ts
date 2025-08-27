@@ -9,4 +9,5 @@ export enum EnumServiceKey {
   IPCMainService = 'IPCMainService',
   CustomEventService = 'CustomEventService',
   AutoLaunchService = 'AutoLaunchService',
+  HotkeyService = 'HotkeyService',
 }

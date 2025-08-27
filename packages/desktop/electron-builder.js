@@ -7,7 +7,6 @@ module.exports = {
   asar: true,
   productName: 'CopyApp',
   directories: {
-     
     output: 'release/${version}',
   },
   files: ['dist', 'dist-electron', 'build/icons/png/32x32.png'],
@@ -37,7 +36,7 @@ module.exports = {
   mac: {
     target: ['dmg'],
     icon: 'build/icons/mac/icon.icns',
-     
+
     artifactName: '${productName}-Mac-${version}.${ext}',
     category: 'public.app-category.productivity',
   },
@@ -49,7 +48,7 @@ module.exports = {
         arch: ['x64'],
       },
     ],
-     
+
     artifactName: '${productName}-Windows-${version}.${ext}',
     signingHashAlgorithms: null,
   },
@@ -65,7 +64,7 @@ module.exports = {
   linux: {
     target: ['AppImage'],
     icon: 'build/icons/png',
-     
+
     artifactName: '${productName}-Linux-${version}.${ext}',
     category: 'Utility',
   },
@@ -74,7 +73,7 @@ module.exports = {
   // publish: [
   //   {
   //     provider: 'github',
-  //     owner: '2531800823', 
+  //     owner: '2531800823',
   //     repo: 'copy',
   //     releaseType: 'release',
   //     private: false,
