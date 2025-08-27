@@ -18,7 +18,7 @@
     "build:mac": "tsc && vite build && electron-builder --mac",
     "build:linux": "tsc && vite build && electron-builder --linux",
     "publish": "tsc && vite build && electron-builder --publish always",
-    "publish:win": "tsc && vite build && electron-builder --win --publish always",
+    "publish:win": "tsc && vite build && electron-builder ",
     "publish:mac": "tsc && vite build && electron-builder --mac --publish always",
     "publish:linux": "tsc && vite build && electron-builder --linux --publish always",
     "preview": "vite preview"
