@@ -46,9 +46,9 @@ export class HotkeyService {
    * 注册默认快捷键
    */
   private _registerDefaultHotkeys(): void {
-    // 注册开发者工具快捷键 Ctrl+Shift+`
+    // 注册开发者工具快捷键 Ctrl+Shift+0
     this.registerHotkey(
-      'CommandOrControl+Shift+`',
+      'CommandOrControl+Shift+0',
       () => {
         this._toggleDevTools();
       },
