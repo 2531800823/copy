@@ -1,4 +1,4 @@
-import {contextBridge, ipcRenderer} from 'electron';
+import {contextBridge, ipcRenderer, webUtils} from 'electron';
 import { IpcChannel } from './ipc/channels';
 
 // 日志接口类型
@@ -44,6 +44,15 @@ interface WindowConfigAPI {
 interface AutoLaunchAPI {
   get: () => Promise<boolean>;
   set: (enable: boolean) => Promise<boolean>;
+}
+
+// ZIP 解压接口
+interface ArchiveAPI {
+  getPathForFile: (file: File) => string;
+  extractZipAndOpen: (zipPath: string) => Promise<{outputDir: string}>;
+  getWorkspaceDir: () => Promise<string>;
+  selectWorkspaceDir: () => Promise<string | null>;
+  hideDropWindow: () => Promise<void>;
 }
 
 // 自定义IPC接口
@@ -162,3 +171,16 @@ contextBridge.exposeInMainWorld('autoLaunch', {
   set: (enable: boolean) =>
     ipcRenderer.invoke(IpcChannel.SET_AUTO_LAUNCH, enable),
 } as AutoLaunchAPI);
+
+// 暴露 ZIP 解压 API
+contextBridge.exposeInMainWorld('archive', {
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
+  extractZipAndOpen: (zipPath: string) =>
+    ipcRenderer.invoke(IpcChannel.ARCHIVE_EXTRACT_ZIP_AND_OPEN, zipPath),
+  getWorkspaceDir: () =>
+    ipcRenderer.invoke(IpcChannel.ARCHIVE_GET_WORKSPACE_DIR),
+  selectWorkspaceDir: () =>
+    ipcRenderer.invoke(IpcChannel.ARCHIVE_SELECT_WORKSPACE_DIR),
+  hideDropWindow: () =>
+    ipcRenderer.invoke(IpcChannel.ARCHIVE_HIDE_DROP_WINDOW),
+} as ArchiveAPI);

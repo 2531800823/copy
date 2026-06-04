@@ -1,0 +1,65 @@
+.dropWindow {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  color: #e6f7ff;
+  background:
+    linear-gradient(135deg, rgba(8, 16, 28, 0.92), rgba(15, 23, 42, 0.9)),
+    radial-gradient(circle at 20% 18%, rgba(34, 197, 94, 0.34), transparent 34%),
+    radial-gradient(circle at 82% 72%, rgba(56, 189, 248, 0.24), transparent 32%);
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 8px;
+}
+
+.dragHandle {
+  height: 24px;
+  padding: 5px 10px 0;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 11px;
+  line-height: 1;
+  -webkit-app-region: drag;
+}
+
+.content {
+  height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px 20px;
+  text-align: center;
+}
+
+.badge {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+  border: 1px solid rgba(187, 247, 208, 0.45);
+  border-radius: 50%;
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.14);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.active {
+  color: #fff;
+  background: rgba(14, 165, 233, 0.18);
+}
+
+.title {
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.desc {
+  margin: 6px 0 0;
+  max-width: 210px;
+  color: rgba(226, 232, 240, 0.74);
+  font-size: 12px;
+  line-height: 1.5;
+}

@@ -10,4 +10,6 @@ export enum EnumServiceKey {
   CustomEventService = 'CustomEventService',
   AutoLaunchService = 'AutoLaunchService',
   HotkeyService = 'HotkeyService',
+  ArchiveService = 'ArchiveService',
+  ShellContextMenuService = 'ShellContextMenuService',
 }
