@@ -2,12 +2,17 @@
  * Electron Builder 配置
  * @see - https://www.electron.build/configuration/configuration
  */
+const path = require('path');
+
+const projectDir = __dirname;
+
 module.exports = {
   appId: 'com.liushipeng.copy',
   asar: true,
   productName: 'CopyApp',
   directories: {
-    output: 'release/${version}',
+    // 使用绝对路径，避免 CI / pnpm 工作目录变化导致产物写到别处
+    output: path.join(projectDir, 'release', '${version}'),
   },
   files: ['dist', 'dist-electron', 'build/icons/png/32x32.png'],
   extraResources: [
@@ -35,7 +40,7 @@ module.exports = {
   //     filter: ['**/*'],
   //   },
   // ],
-  buildDependenciesFromSource: true,
+  buildDependenciesFromSource: false,
   npmRebuild: false,
   forceCodeSigning: false,
   mac: {

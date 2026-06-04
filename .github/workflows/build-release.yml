@@ -53,7 +53,12 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: 安装依赖
-        run: pnpm install
+        env:
+          # GHA 海外节点使用官方源；避免 .npmrc 国内镜像导致 electron 下载失败
+          npm_config_registry: https://registry.npmjs.org/
+        run: |
+          pnpm config set node-linker hoisted
+          pnpm install
 
       - name: 解析版本号
         id: version
@@ -74,14 +79,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ELECTRON_BUILDER_CACHE: false
           APP_VERSION: ${{ steps.version.outputs.version }}
+          npm_config_registry: https://registry.npmjs.org/
+          npm_config_electron_mirror: https://github.com/electron/electron/releases/download/v
+          npm_config_electron_builder_binaries_mirror: https://github.com/electron-userland/electron-builder-binaries/releases/download/
         shell: bash
         timeout-minutes: 60
         run: |
           set -euo pipefail
 
-          cd packages/desktop
+          DESKTOP_DIR="$GITHUB_WORKSPACE/packages/desktop"
+          cd "$DESKTOP_DIR"
 
-          # 用 Node 更新版本号（避免 Windows 上 sed -i 破坏 package.json）
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -91,43 +99,57 @@ jobs:
           echo "构建版本: $(node -p "require('./package.json').version")"
 
           if [ ! -d ../web/dist ]; then
-            echo "::error::缺少 Web 构建产物 packages/web/dist，请先执行 pnpm build:web"
+            echo "::error::缺少 Web 构建产物 packages/web/dist"
             exit 1
           fi
 
-          pnpm build:win
+          # 在 bash 中分步执行，避免 Windows 下 pnpm 用 cmd 跑脚本时 electron-builder 未执行
+          echo ">>> tsc"
+          pnpm exec tsc
+          echo ">>> vite build"
+          pnpm exec vite build
+          echo ">>> electron-builder"
+          pnpm exec electron-builder --project . --config ./electron-builder.js --win nsis
 
-          echo "=== electron-builder 输出 (packages/desktop/release) ==="
-          if [ ! -d release ]; then
-            echo "::error::release 目录不存在，electron-builder 可能未成功执行"
-            cd ../..
-            find . -name "CopyApp-Windows-*.exe" -not -path "*/node_modules/*" || true
+          resolve_release_root() {
+            for dir in \
+              "$DESKTOP_DIR/release" \
+              "$GITHUB_WORKSPACE/release" \
+              "$GITHUB_WORKSPACE/packages/desktop/release"
+            do
+              if [ -d "$dir" ] && find "$dir" -type f -name "CopyApp-Windows-*.exe" | grep -q .; then
+                echo "$dir"
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          RELEASE_ROOT="$(resolve_release_root || true)"
+          if [ -z "$RELEASE_ROOT" ]; then
+            echo "::error::未找到 release 目录或安装包"
+            find "$GITHUB_WORKSPACE" -name "CopyApp-Windows-*.exe" -not -path "*/node_modules/*" || true
             exit 1
           fi
-          ls -laR release
 
-          if ! find release -type f -name "CopyApp-Windows-*.exe" | grep -q .; then
-            echo "::error::未找到 CopyApp-Windows-*.exe 安装包"
-            exit 1
-          fi
+          echo "=== release 目录: $RELEASE_ROOT ==="
+          ls -laR "$RELEASE_ROOT"
 
-          # 立即复制到 ci-artifacts（upload-artifact 会忽略 .gitignore 中的 release/**）
-          cd ../..
-          mkdir -p ci-artifacts
+          mkdir -p "$GITHUB_WORKSPACE/ci-artifacts"
           while IFS= read -r -d '' file; do
-            rel="${file#packages/desktop/release/}"
-            mkdir -p "ci-artifacts/$(dirname "$rel")"
-            cp "$file" "ci-artifacts/$rel"
-          done < <(find packages/desktop/release -type f \
+            rel="${file#"$RELEASE_ROOT"/}"
+            mkdir -p "$GITHUB_WORKSPACE/ci-artifacts/$(dirname "$rel")"
+            cp "$file" "$GITHUB_WORKSPACE/ci-artifacts/$rel"
+          done < <(find "$RELEASE_ROOT" -type f \
             ! -path "*/win-unpacked/*" \
             ! -path "*/linux-unpacked/*" \
             ! -path "*/mac/*" \
             -print0)
 
           echo "=== ci-artifacts 文件列表 ==="
-          find ci-artifacts -type f | sort
+          find "$GITHUB_WORKSPACE/ci-artifacts" -type f | sort
 
-          if [ -z "$(find ci-artifacts -type f -print -quit)" ]; then
+          if [ -z "$(find "$GITHUB_WORKSPACE/ci-artifacts" -type f -print -quit)" ]; then
             echo "::error::ci-artifacts 为空"
             exit 1
           fi
