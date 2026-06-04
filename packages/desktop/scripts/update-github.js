@@ -16,7 +16,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const {Octokit} = require('@octokit/rest');
 const {execSync} = require('child_process');
 const {version} = require('../package.json');
 
@@ -140,7 +139,7 @@ class Config {
  * GitHub Release 管理器
  */
 class GitHubReleaseManager {
-  constructor(config) {
+  constructor(config, Octokit) {
     this.config = config;
     this.octokit = new Octokit({
       auth: config.token,
@@ -539,11 +538,13 @@ class GitHubReleaseManager {
  */
 async function main() {
   try {
+    const {Octokit} = await import('@octokit/rest');
+
     // 1. 加载配置
     const config = new Config();
 
     // 2. 创建 Release 管理器
-    const manager = new GitHubReleaseManager(config);
+    const manager = new GitHubReleaseManager(config, Octokit);
 
     // 3. 执行流程
     await manager.execute();
