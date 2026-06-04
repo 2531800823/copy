@@ -29,6 +29,14 @@ interface AutoLaunchAPI {
   set: (enable: boolean) => Promise<boolean>
 }
 
+interface ArchiveAPI {
+  getPathForFile: (file: File) => string
+  extractZipAndOpen: (zipPath: string) => Promise<{outputDir: string}>
+  getWorkspaceDir: () => Promise<string>
+  selectWorkspaceDir: () => Promise<string | null>
+  hideDropWindow: () => Promise<void>
+}
+
 // 日志接口类型
 interface LogAPI {
   trace: (category: string, message: string, data?: any) => Promise<any>
@@ -60,4 +68,5 @@ interface Window {
   updater: UpdaterAPI
   windowConfig: WindowConfigAPI
   autoLaunch: AutoLaunchAPI
+  archive: ArchiveAPI
 }

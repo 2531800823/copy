@@ -1,6 +1,7 @@
 import {Button} from '@douyinfe/semi-ui';
 import {map} from 'lodash-es';
 import React, {useEffect, useState} from 'react';
+import toast from 'react-hot-toast';
 import {Link} from 'react-router-dom';
 import {hotKeys} from '../hooks/useHotKeys';
 import useCardStore from '../store/useCardStore';
@@ -21,6 +22,8 @@ const SettingsPage: React.FC = () => {
   const [autoLaunch, setAutoLaunch] = useState(false);
   // 加载状态
   const [loading, setLoading] = useState(true);
+  const [workspaceDir, setWorkspaceDir] = useState('');
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
 
   // 初始化时获取自启动状态
   useEffect(() => {
@@ -40,6 +43,46 @@ const SettingsPage: React.FC = () => {
 
     initAutoLaunch();
   }, []);
+
+  const loadWorkspaceDir = async () => {
+    if (!window.archive) return;
+
+    try {
+      setWorkspaceLoading(true);
+      const dir = await window.archive.getWorkspaceDir();
+      setWorkspaceDir(dir);
+    } catch (error) {
+      console.error('获取 ZIP 工作目录失败', error);
+      toast.error('获取 ZIP 工作目录失败');
+    } finally {
+      setWorkspaceLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadWorkspaceDir();
+  }, []);
+
+  const handleSelectWorkspaceDir = async () => {
+    if (!window.archive) {
+      toast.error('当前环境不支持配置 ZIP 工作目录');
+      return;
+    }
+
+    try {
+      setWorkspaceLoading(true);
+      const selectedDir = await window.archive.selectWorkspaceDir();
+      if (selectedDir) {
+        setWorkspaceDir(selectedDir);
+        toast.success('ZIP 工作目录已更新');
+      }
+    } catch (error) {
+      console.error('选择 ZIP 工作目录失败', error);
+      toast.error('选择 ZIP 工作目录失败');
+    } finally {
+      setWorkspaceLoading(false);
+    }
+  };
 
   /**
    * 切换自启动状态
@@ -125,6 +168,29 @@ const SettingsPage: React.FC = () => {
             className={styles.actionButton}>
             清除备份数据
           </Button>
+        </div>
+      </div>
+
+      <div className={styles.settingSection}>
+        <h2>ZIP 工作目录</h2>
+
+        <div className={styles.settingItem}>
+          <label className={styles.settingLabel}>
+            <span>固定解压目录</span>
+            <Button
+              type="primary"
+              size="small"
+              loading={workspaceLoading}
+              onClick={handleSelectWorkspaceDir}>
+              更改目录
+            </Button>
+          </label>
+          <div className={styles.pathBox}>
+            {workspaceDir || '正在读取工作目录...'}
+          </div>
+          <p className={styles.settingDescription}>
+            拖入 ZIP 后会解压到此目录，并自动用 VSCode 打开解压结果。
+          </p>
         </div>
       </div>
 

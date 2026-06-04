@@ -22,6 +22,11 @@ module.exports = {
       to: 'build/icons/png/32x32.png',
       filter: ['**/*'],
     },
+    {
+      from: './src/native/',
+      to: 'native',
+      filter: ['**/*'],
+    },
   ],
   // 移除extraFiles配置，避免重复复制
   // extraFiles: [
@@ -61,6 +66,7 @@ module.exports = {
     createDesktopShortcut: 'always',
     createStartMenuShortcut: true,
     shortcutName: 'CopyApp',
+    include: 'build/installer.nsh',
   },
   linux: {
     target: ['AppImage'],

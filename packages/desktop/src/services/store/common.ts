@@ -6,6 +6,8 @@ export enum EnumStoreKey {
   AUTO_LAUNCH = 'autoLaunch',
   /** 窗口状态 */
   WINDOW_STATE = 'windowState',
+  /** ZIP 解压工作目录 */
+  ARCHIVE_WORKSPACE_DIR = 'archiveWorkspaceDir',
 }
 
 /** 存储配置接口 */
@@ -13,6 +15,7 @@ export interface StoreConfig {
   [EnumStoreKey.WINDOW]: WindowConfig
   [EnumStoreKey.AUTO_LAUNCH]: boolean
   [EnumStoreKey.WINDOW_STATE]: WindowState
+  [EnumStoreKey.ARCHIVE_WORKSPACE_DIR]: string
 }
 
 /**

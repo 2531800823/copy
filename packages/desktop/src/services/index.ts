@@ -1,5 +1,7 @@
 import { AutoLaunchService } from './AutoLaunchService'
 import { AutoUpdaterService } from './AutoUpdaterService';
+import { ArchiveService } from './ArchiveService'
+import { ShellContextMenuService } from './ShellContextMenuService'
 import { CustomEventService } from './CustomEventService'
 import { IPCMainService } from './IPCMainService'
 import { ProtocolService } from './ProtocolService'
@@ -17,6 +19,8 @@ export const containerServices = {
   [EnumServiceKey.IPCMainService]: IPCMainService,
   [EnumServiceKey.CustomEventService]: CustomEventService,
   [EnumServiceKey.AutoLaunchService]: AutoLaunchService,
+  [EnumServiceKey.ArchiveService]: ArchiveService,
+  [EnumServiceKey.ShellContextMenuService]: ShellContextMenuService,
 }
 
 export type ServiceMapping = typeof containerServices

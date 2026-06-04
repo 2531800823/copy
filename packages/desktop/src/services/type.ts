@@ -9,4 +9,6 @@ export enum EnumServiceKey {
   IPCMainService = 'IPCMainService',
   CustomEventService = 'CustomEventService',
   AutoLaunchService = 'AutoLaunchService',
+  ArchiveService = 'ArchiveService',
+  ShellContextMenuService = 'ShellContextMenuService',
 }

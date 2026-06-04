@@ -1,11 +1,16 @@
 import type {Container} from 'inversify';
+import type {ChildProcessWithoutNullStreams} from 'node:child_process';
 import type {Subscription} from 'rxjs';
 import type {PartialConfig} from '@/common/config';
 import type {ServiceInstanceMapping, ServiceMapping} from '@/services';
-import {BrowserWindow, Menu} from 'electron';
+import {spawn} from 'node:child_process';
+import path from 'node:path';
+import fs from 'node:fs';
+import {app, BrowserWindow, dialog, Menu, screen} from 'electron';
 import {debounceTime, filter} from 'rxjs/operators';
 import {isDev, preloadPath} from '@/common';
 import {EnumServiceKey} from '@/services/type';
+import {parseExtractZipArg} from '@/services/ShellContextMenuService';
 import logger from '../services/LoggerService';
 import {Config} from './Config';
 import {initRegisterServices} from './container';
@@ -22,6 +27,10 @@ export class MainApplication {
   private _container!: Container;
   private _isInitialized = false;
   private _mainWindow: BrowserWindow | null = null;
+  private _dropWindow: BrowserWindow | null = null;
+  private _dragMonitorProcess: ChildProcessWithoutNullStreams | null = null;
+  private _dropWindowHideTimer: NodeJS.Timeout | null = null;
+  private _isQuitting = false;
   private _subscriptions = new Set<Subscription>();
 
   // 核心管理器实例
@@ -171,13 +180,22 @@ export class MainApplication {
       })
     );
 
-    // 二次实例事件：确保窗口单例并聚焦现有窗口
+    // 二次实例事件：处理右键菜单参数，或聚焦已有主窗口
     this._subscriptions.add(
       this._nativeEventManager.appSecondInstance$.subscribe(
-        async ({argv, cwd}) => {
+        async ({argv, additionalData}) => {
+          const zipPath =
+            additionalData?.extractZip || parseExtractZipArg(argv);
+          if (zipPath) {
+            logger.info('MainApplication', '收到右键菜单解压请求', zipPath);
+            await this._handleExtractZipFromContextMenu(zipPath);
+            return;
+          }
+
           logger.info(
             'MainApplication',
-            '检测到二次实例启动，尝试聚焦已有主窗口'
+            '检测到二次实例启动，尝试聚焦已有主窗口',
+            {argv, additionalData}
           );
           if (this._mainWindow && !this._mainWindow.isDestroyed()) {
             if (this._mainWindow.isMinimized()) {
@@ -235,6 +253,8 @@ export class MainApplication {
    * 应用准备就绪时的处理
    */
   private async _onAppReady(): Promise<void> {
+    const contextZipPath = parseExtractZipArg(process.argv);
+
     // 在生产环境下，先设置协议处理器，确保页面加载前协议就绪
     if (!isDev) {
       logger.info('MainApplication', '开始设置协议处理器');
@@ -242,23 +262,56 @@ export class MainApplication {
       logger.info('MainApplication', '协议处理器设置完成');
     }
 
-    // 创建主窗口
-    await this._createMainWindow();
+    if (process.platform === 'win32') {
+      this.getService(EnumServiceKey.ShellContextMenuService).registerZipExtractMenu();
+    }
 
-    this.getService(EnumServiceKey.WindowStateManager).start(this._mainWindow);
+    // 右键菜单启动时只保留托盘，不弹出主窗口
+    if (!contextZipPath) {
+      await this._createMainWindow();
+    }
+
+    await this._createDropWindow();
+
+    if (this._mainWindow) {
+      this.getService(EnumServiceKey.WindowStateManager).start(this._mainWindow);
+    }
 
     // 初始化自动更新
     this.getService(EnumServiceKey.AutoUpdaterService).init();
 
     this.getService(EnumServiceKey.CustomEventService).createMainWin$.next();
+    this._startDragMonitor();
+
+    if (contextZipPath) {
+      await this._handleExtractZipFromContextMenu(contextZipPath);
+    }
 
     logger.info('MainApplication', '应用准备就绪处理完成');
+  }
+
+  private async _handleExtractZipFromContextMenu(zipPath: string): Promise<void> {
+    try {
+      const result = await this.getService(EnumServiceKey.ArchiveService).extractZipAndOpen(
+        zipPath
+      );
+      logger.info('MainApplication', '右键菜单解压完成', result);
+    }
+    catch (error) {
+      logger.error('MainApplication', '右键菜单解压失败', error);
+      dialog.showErrorBox(
+        '解压失败',
+        error instanceof Error ? error.message : '解压 ZIP 失败'
+      );
+    }
   }
 
   /**
    * 应用退出前的处理
    */
   private async _onBeforeQuit(): Promise<void> {
+    this._isQuitting = true;
+    this._stopDragMonitor();
     // 停止应用
     await this.stop();
   }
@@ -340,6 +393,50 @@ export class MainApplication {
     logger.info('MainApplication', '主窗口创建完成');
   }
 
+  private async _createDropWindow(): Promise<void> {
+    if (this._dropWindow && !this._dropWindow.isDestroyed()) {
+      return;
+    }
+
+    const {x, y} = this._getDropWindowBounds();
+
+    this._dropWindow = new BrowserWindow({
+      width: 280,
+      height: 170,
+      x,
+      y,
+      frame: false,
+      transparent: true,
+      resizable: false,
+      maximizable: false,
+      minimizable: false,
+      skipTaskbar: true,
+      show: false,
+      alwaysOnTop: true,
+      autoHideMenuBar: true,
+      backgroundColor: '#00000000',
+      webPreferences: {
+        preload: preloadPath,
+        webSecurity: true,
+        nodeIntegration: true,
+        contextIsolation: true,
+        allowRunningInsecureContent: true,
+      },
+    });
+
+    this._dropWindow.setAlwaysOnTop(true, 'floating');
+    this._dropWindow.setVisibleOnAllWorkspaces(true, {
+      visibleOnFullScreen: true,
+    });
+
+    this._dropWindow.on('closed', () => {
+      logger.info('MainApplication', 'ZIP 投放窗口已关闭');
+      this._dropWindow = null;
+    });
+
+    await this._loadDropWindow();
+  }
+
   /**
    * 加载窗口页面
    */
@@ -379,6 +476,131 @@ export class MainApplication {
 
       throw error;
     }
+  }
+
+  private async _loadDropWindow(): Promise<void> {
+    if (!this._dropWindow) return;
+
+    const appUrl = this._config.get('appUrl');
+    const dropWindowUrl = new URL(appUrl);
+    dropWindowUrl.searchParams.set('window', 'drop');
+
+    await this._dropWindow.loadURL(dropWindowUrl.toString());
+    logger.info('MainApplication', `ZIP 投放窗口已加载: ${dropWindowUrl}`);
+  }
+
+  public showDropWindow(): void {
+    if (!this._dropWindow || this._dropWindow.isDestroyed()) {
+      void this._createDropWindow().then(() => this.showDropWindow());
+      return;
+    }
+
+    if (this._dropWindowHideTimer) {
+      clearTimeout(this._dropWindowHideTimer);
+      this._dropWindowHideTimer = null;
+    }
+
+    this._dropWindow.setBounds(this._getDropWindowBounds());
+    this._dropWindow.showInactive();
+  }
+
+  public hideDropWindow(delay = 600): void {
+    if (!this._dropWindow || this._dropWindow.isDestroyed()) return;
+
+    if (this._dropWindowHideTimer) {
+      clearTimeout(this._dropWindowHideTimer);
+    }
+
+    this._dropWindowHideTimer = setTimeout(() => {
+      this._dropWindow?.hide();
+      this._dropWindowHideTimer = null;
+    }, delay);
+  }
+
+  private _getDropWindowBounds() {
+    const width = 280;
+    const height = 170;
+    const workArea = screen.getPrimaryDisplay().workArea;
+    const margin = 18;
+
+    return {
+      width,
+      height,
+      x: workArea.x + workArea.width - width - margin,
+      y: workArea.y + margin,
+    };
+  }
+
+  private _startDragMonitor(): void {
+    if (process.platform !== 'win32' || this._dragMonitorProcess) return;
+
+    const scriptPath = isDev
+      ? path.join(app.getAppPath(), 'src/native/drag-monitor.ps1')
+      : path.join(process.resourcesPath, 'native/drag-monitor.ps1');
+
+    if (!fs.existsSync(scriptPath)) {
+      logger.error('MainApplication', '拖拽监听脚本不存在', {scriptPath});
+      return;
+    }
+
+    logger.info('MainApplication', '启动拖拽监听 helper', {scriptPath});
+
+    this._dragMonitorProcess = spawn(
+      'powershell.exe',
+      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
+      {
+        windowsHide: true,
+      }
+    );
+
+    this._dragMonitorProcess.stdout.on('data', (chunk) => {
+      const lines = chunk.toString().split(/\r?\n/).filter(Boolean);
+      lines.forEach((line: string) => {
+        try {
+          const event = JSON.parse(line) as {type?: string};
+          if (event.type === 'ready') {
+            logger.info('MainApplication', '拖拽监听 helper 已就绪');
+            return;
+          }
+          if (event.type === 'dragstart') {
+            logger.debug('MainApplication', '检测到系统拖拽开始');
+            this.showDropWindow();
+          }
+          else if (event.type === 'dragend') {
+            logger.debug('MainApplication', '检测到系统拖拽结束');
+            this.hideDropWindow();
+          }
+        } catch (error) {
+          logger.warn('MainApplication', '解析拖拽监听事件失败', {
+            line,
+            error,
+          });
+        }
+      });
+    });
+
+    this._dragMonitorProcess.stderr.on('data', (chunk) => {
+      logger.warn('MainApplication', '拖拽监听 helper 输出错误', chunk.toString());
+    });
+
+    this._dragMonitorProcess.on('error', (error) => {
+      logger.error('MainApplication', '拖拽监听 helper 启动失败', error);
+      this._dragMonitorProcess = null;
+    });
+
+    this._dragMonitorProcess.on('exit', (code, signal) => {
+      logger.info('MainApplication', '拖拽监听 helper 已退出', {code, signal});
+      this._dragMonitorProcess = null;
+
+      if (!this._isQuitting) {
+        setTimeout(() => this._startDragMonitor(), 1500);
+      }
+    });
+  }
+
+  private _stopDragMonitor(): void {
+    this._dragMonitorProcess?.kill();
+    this._dragMonitorProcess = null;
   }
 
   /**

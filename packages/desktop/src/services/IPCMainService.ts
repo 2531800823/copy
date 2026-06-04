@@ -1,4 +1,5 @@
 import type {AutoLaunchService} from './AutoLaunchService';
+import type {ArchiveService} from './ArchiveService';
 import type {CustomEventService} from './CustomEventService';
 import type {MainApplication} from '@/core/MainApplication';
 import {app, ipcMain} from 'electron';
@@ -12,13 +13,17 @@ import {EnumServiceKey} from './type';
 
 @injectable()
 export class IPCMainService {
+  private registered = false;
+
   constructor(
     @inject(EnumServiceKey.MainApplication)
     private mainApplication: MainApplication,
     @inject(EnumServiceKey.CustomEventService)
     private customEventService: CustomEventService,
     @inject(EnumServiceKey.AutoLaunchService)
-    private autoLaunchService: AutoLaunchService
+    private autoLaunchService: AutoLaunchService,
+    @inject(EnumServiceKey.ArchiveService)
+    private archiveService: ArchiveService
   ) {
     //   延迟注册
     this.customEventService.createMainWin$.pipe(delay(1000)).subscribe(() => {
@@ -31,6 +36,9 @@ export class IPCMainService {
   }
 
   public register() {
+    if (this.registered) return;
+    this.registered = true;
+
     // 置顶窗口
     ipcMain.handle(IpcChannel.TOGGLE_WINDOW_TOP, (_event, flag) => {
       if (!this.mainWindow) return;
@@ -69,6 +77,30 @@ export class IPCMainService {
     ipcMain.handle(IpcChannel.SET_AUTO_LAUNCH, (_event, enable) => {
       logger.debug('IPC', `设置自启动状态: ${enable}`);
       return this.autoLaunchService.setEnabled(enable);
+    });
+
+    // 解压 ZIP 并打开 VSCode
+    ipcMain.handle(IpcChannel.ARCHIVE_EXTRACT_ZIP_AND_OPEN, (_event, zipPath) => {
+      logger.debug('IPC', '解压 ZIP 并打开 VSCode', zipPath);
+      return this.archiveService.extractZipAndOpen(zipPath);
+    });
+
+    // 获取 ZIP 工作目录
+    ipcMain.handle(IpcChannel.ARCHIVE_GET_WORKSPACE_DIR, () => {
+      logger.debug('IPC', '获取 ZIP 工作目录');
+      return this.archiveService.getWorkspaceDir();
+    });
+
+    // 选择 ZIP 工作目录
+    ipcMain.handle(IpcChannel.ARCHIVE_SELECT_WORKSPACE_DIR, () => {
+      logger.debug('IPC', '选择 ZIP 工作目录');
+      return this.archiveService.selectWorkspaceDir(this.mainWindow);
+    });
+
+    // 隐藏 ZIP 投放窗口
+    ipcMain.handle(IpcChannel.ARCHIVE_HIDE_DROP_WINDOW, () => {
+      logger.debug('IPC', '隐藏 ZIP 投放窗口');
+      this.mainApplication.hideDropWindow(300);
     });
 
     // 检查更新

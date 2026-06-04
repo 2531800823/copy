@@ -3,6 +3,7 @@ import { app } from 'electron'
 import { EMPTY, merge, Subject } from 'rxjs';
 import { debounceTime, filter, map, share, takeUntil } from 'rxjs/operators';
 import logger from '../services/LoggerService';
+import {createSingleInstanceAdditionalData} from '../services/ShellContextMenuService';
 
 /**
  * 应用生命周期事件类型
@@ -17,6 +18,7 @@ export interface AppLifecycleEvents {
   'app:second-instance': {
     argv: string[]
     cwd: string
+    additionalData?: {extractZip?: string}
   }
 }
 
@@ -46,7 +48,11 @@ export class ElectronNativeEventManager {
   private _appActivateSubject = new Subject<void>();
   private _appWillQuitSubject = new Subject<void>();
   private _appQuitSubject = new Subject<void>();
-  private _appSecondInstanceSubject = new Subject<{ argv: string[]; cwd: string }>();
+  private _appSecondInstanceSubject = new Subject<{
+    argv: string[]
+    cwd: string
+    additionalData?: {extractZip?: string}
+  }>();
 
   // 公共 Observable 流
   public readonly appReady$ = this._appReadySubject.asObservable().pipe(share());
@@ -159,7 +165,8 @@ export class ElectronNativeEventManager {
    */
   private _setupAppEvents(): void {
     // 应用单实例锁，防止启动多个实例
-    const gotTheLock = app.requestSingleInstanceLock();
+    const additionalData = createSingleInstanceAdditionalData();
+    const gotTheLock = app.requestSingleInstanceLock(additionalData);
     if (!gotTheLock) {
       logger.warn('ElectronNativeEventManager', '检测到已有应用实例，当前进程将退出');
       app.quit();
@@ -167,9 +174,19 @@ export class ElectronNativeEventManager {
     }
 
     // 监听二次实例事件，将焦点交给已存在窗口
-    app.on('second-instance', (_event, argv, workingDirectory) => {
-      logger.info('ElectronNativeEventManager', '收到 second-instance 事件');
-      this._appSecondInstanceSubject.next({ argv: Array.isArray(argv) ? [...argv] : [], cwd: String(workingDirectory || '') });
+    app.on('second-instance', (_event, argv, workingDirectory, secondAdditionalData) => {
+      logger.info('ElectronNativeEventManager', '收到 second-instance 事件', {
+        argv,
+        additionalData: secondAdditionalData,
+      });
+      this._appSecondInstanceSubject.next({
+        argv: Array.isArray(argv) ? [...argv] : [],
+        cwd: String(workingDirectory || ''),
+        additionalData:
+          secondAdditionalData && typeof secondAdditionalData === 'object'
+            ? (secondAdditionalData as {extractZip?: string})
+            : undefined,
+      });
     });
     // 应用准备就绪
     app.whenReady().then(() => {
