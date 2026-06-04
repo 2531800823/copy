@@ -97,10 +97,16 @@ class Config {
     // 加载 .env 文件
     loadEnvFile();
 
-    this.token = process.env.GITHUB_TOKEN;
-    console.log("🚀 liu123 ~ this.token:", this.token)
-    this.owner = process.env.GITHUB_OWNER || '2531800823';
-    this.repo = process.env.GITHUB_REPO || 'copy';
+    this.token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+
+    if (process.env.GITHUB_REPOSITORY) {
+      const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+      this.owner = process.env.GITHUB_OWNER || owner;
+      this.repo = process.env.GITHUB_REPO || repo;
+    } else {
+      this.owner = process.env.GITHUB_OWNER || '2531800823';
+      this.repo = process.env.GITHUB_REPO || 'copy';
+    }
     this.version = `v${version}`;
     this.isDraft = process.argv.includes('--draft');
     this.isPrerelease = process.argv.includes('--prerelease');
@@ -113,7 +119,9 @@ class Config {
    */
   validate() {
     if (!this.token) {
-      throw new Error('❌ 请设置环境变量 GITHUB_TOKEN');
+      throw new Error(
+        '❌ 请设置环境变量 GITHUB_TOKEN 或 GH_TOKEN'
+      );
     }
 
     if (!this.version) {
@@ -211,16 +219,6 @@ class GitHubReleaseManager {
   async checkTokenPermissions() {
     try {
       console.log('🔐 检查 GitHub Token 权限...');
-      console.log(
-        `🚀 liu123 ~ {
-        owner: this.config.owner,
-        repo: this.config.repo,
-      }:`,
-        {
-          owner: this.config.owner,
-          repo: this.config.repo,
-        }
-      );
 
       // 尝试获取仓库信息
       const repoResponse = await this.octokit.repos.get({

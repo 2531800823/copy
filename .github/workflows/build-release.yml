@@ -90,7 +90,7 @@ jobs:
             sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" package.json
           fi
 
-          # 构建应用（不发布，只构建）
+          # 构建应用（产物在 release/<version>/，由 release job 上传到 GitHub Releases）
           if [ "${{ runner.os }}" = "Windows" ]; then
             pnpm build:win
           elif [ "${{ runner.os }}" = "macOS" ]; then
@@ -98,6 +98,9 @@ jobs:
           else
             pnpm build:linux
           fi
+
+          echo "=== 构建产物目录 ==="
+          ls -laR release || true
         shell: bash
         timeout-minutes: 60
 
@@ -106,16 +109,11 @@ jobs:
         with:
           name: release-${{ runner.os }}
           path: |
-            packages/desktop/release/*/CopyApp-*.*
-            !packages/desktop/release/*/win-unpacked
-            !packages/desktop/release/*/mac
-            !packages/desktop/release/*/linux-unpacked
-            packages/desktop/release/*.AppImage
-            packages/desktop/release/*.deb
-            packages/desktop/release/*.rpm
-            packages/desktop/release/*.exe
-            packages/desktop/release/*.dmg
-            packages/desktop/release/*.yml
+            packages/desktop/release/**
+            !packages/desktop/release/**/win-unpacked/**
+            !packages/desktop/release/**/linux-unpacked/**
+            !packages/desktop/release/**/mac/**
+          if-no-files-found: error
 
   release:
     needs: build
@@ -134,30 +132,39 @@ jobs:
 
       - name: 整理发布文件
         run: |
-          # 创建发布目录
           mkdir -p release-files
-          # 复制所有构建产物到发布目录
-          find artifacts -name "*.exe" -exec cp {} release-files/ \;
-          find artifacts -name "*.dmg" -exec cp {} release-files/ \;
-          find artifacts -name "*.AppImage" -exec cp {} release-files/ \;
-          find artifacts -name "*.deb" -exec cp {} release-files/ \;
-          find artifacts -name "*.rpm" -exec cp {} release-files/ \;
-          find artifacts -name "*.yml" -exec cp {} release-files/ \;
-          # 显示要发布的文件
+          # 安装包 + 自动更新元数据（latest.yml、*.blockmap）
+          find artifacts -type f \( \
+            -name "*.exe" -o \
+            -name "*.exe.blockmap" -o \
+            -name "*.dmg" -o \
+            -name "*.dmg.blockmap" -o \
+            -name "*.AppImage" -o \
+            -name "*.deb" -o \
+            -name "*.rpm" -o \
+            -name "*.yml" -o \
+            -name "*.yaml" \
+          \) -exec cp -t release-files/ {} +
+
           echo "=== 发布文件列表 ==="
           ls -la release-files/
 
-      - name: 创建发布
+          if [ -z "$(ls -A release-files)" ]; then
+            echo "::error::未找到可发布的构建产物，请检查 build job 的 artifact 路径"
+            exit 1
+          fi
+
+      - name: 创建 GitHub Release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.version || github.ref }}
-          name: CopyApp ${{ github.event.inputs.version || github.ref_name }}
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
+          name: CopyApp ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
           draft: false
           prerelease: false
           files: release-files/*
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
           body: |
             # CopyApp 发布版本 ${{ github.event.inputs.version || github.ref_name }}
             
