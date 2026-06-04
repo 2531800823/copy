@@ -11,24 +11,18 @@ on:
         required: true
         default: v0.0.1
 
-# 添加全局权限设置
 permissions:
   contents: write
   packages: write
-  issues: write
-  pull-requests: write
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    # 添加构建任务的权限设置
     permissions:
       contents: write
     strategy:
       matrix:
         os: [windows-latest]
-        # 如果需要构建macOS和Linux版本，可以取消下面注释
-        # os: [windows-latest, macos-latest, ubuntu-latest]
 
     steps:
       - name: 检出代码
@@ -61,69 +55,80 @@ jobs:
       - name: 安装依赖
         run: pnpm install
 
-      - name: 构建Web应用
+      - name: 解析版本号
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            v="${{ github.event.inputs.version }}"
+          else
+            v="${{ github.ref_name }}"
+          fi
+          echo "version=${v#v}" >> "$GITHUB_OUTPUT"
+
+      - name: 构建 Web 应用
         run: pnpm build:web
 
-      - name: 构建桌面应用
+      - name: 构建桌面应用并打包产物
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 设置超时和重试策略
           ELECTRON_BUILDER_CACHE: false
-          DEBUG: electron-builder
-        run: |
-          cd packages/desktop
-          # 设置版本号
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            NEW_VERSION="${{ github.event.inputs.version }}"
-            # 移除前缀 'v'
-            NEW_VERSION="${NEW_VERSION#v}"
-          else
-            # 从 tag 中获取版本号
-            NEW_VERSION="${{ github.ref_name }}"
-            # 移除前缀 'v'
-            NEW_VERSION="${NEW_VERSION#v}"
-          fi
-          # 更新 package.json 中的版本号
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            sed -i "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" package.json
-          else
-            sed -i '' "s/\"version\": \".*\"/\"version\": \"$NEW_VERSION\"/" package.json
-          fi
-
-          # 构建应用（产物在 release/<version>/，由 release job 上传到 GitHub Releases）
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            pnpm build:win
-          elif [ "${{ runner.os }}" = "macOS" ]; then
-            pnpm build:mac
-          else
-            pnpm build:linux
-          fi
-
-          echo "=== 构建产物目录 ==="
-          ls -laR release || true
+          APP_VERSION: ${{ steps.version.outputs.version }}
         shell: bash
         timeout-minutes: 60
-
-      # upload-artifact 会遵循 .gitignore，release/** 被忽略导致上传失败
-      - name: 准备上传目录
-        shell: bash
         run: |
+          set -euo pipefail
+
+          cd packages/desktop
+
+          # 用 Node 更新版本号（避免 Windows 上 sed -i 破坏 package.json）
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.env.APP_VERSION;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "构建版本: $(node -p "require('./package.json').version")"
+
+          if [ ! -d ../web/dist ]; then
+            echo "::error::缺少 Web 构建产物 packages/web/dist，请先执行 pnpm build:web"
+            exit 1
+          fi
+
+          pnpm build:win
+
+          echo "=== electron-builder 输出 (packages/desktop/release) ==="
+          if [ ! -d release ]; then
+            echo "::error::release 目录不存在，electron-builder 可能未成功执行"
+            cd ../..
+            find . -name "CopyApp-Windows-*.exe" -not -path "*/node_modules/*" || true
+            exit 1
+          fi
+          ls -laR release
+
+          if ! find release -type f -name "CopyApp-Windows-*.exe" | grep -q .; then
+            echo "::error::未找到 CopyApp-Windows-*.exe 安装包"
+            exit 1
+          fi
+
+          # 立即复制到 ci-artifacts（upload-artifact 会忽略 .gitignore 中的 release/**）
+          cd ../..
           mkdir -p ci-artifacts
-          find packages/desktop/release -type f \
+          while IFS= read -r -d '' file; do
+            rel="${file#packages/desktop/release/}"
+            mkdir -p "ci-artifacts/$(dirname "$rel")"
+            cp "$file" "ci-artifacts/$rel"
+          done < <(find packages/desktop/release -type f \
             ! -path "*/win-unpacked/*" \
             ! -path "*/linux-unpacked/*" \
             ! -path "*/mac/*" \
-            | while read -r file; do
-              rel="${file#packages/desktop/release/}"
-              mkdir -p "ci-artifacts/$(dirname "$rel")"
-              cp "$file" "ci-artifacts/$rel"
-            done
+            -print0)
 
           echo "=== ci-artifacts 文件列表 ==="
           find ci-artifacts -type f | sort
 
-          if [ -z "$(find ci-artifacts -type f | head -1)" ]; then
-            echo "::error::未找到构建产物，请检查 electron-builder 输出目录 packages/desktop/release"
+          if [ -z "$(find ci-artifacts -type f -print -quit)" ]; then
+            echo "::error::ci-artifacts 为空"
             exit 1
           fi
 
@@ -137,7 +142,6 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    # 添加发布任务的权限设置
     permissions:
       contents: write
     steps:
@@ -151,8 +155,8 @@ jobs:
 
       - name: 整理发布文件
         run: |
+          set -euo pipefail
           mkdir -p release-files
-          # 安装包 + 自动更新元数据（latest.yml、*.blockmap）
           find artifacts -type f \( \
             -name "*.exe" -o \
             -name "*.exe.blockmap" -o \
@@ -169,7 +173,7 @@ jobs:
           ls -la release-files/
 
           if [ -z "$(ls -A release-files)" ]; then
-            echo "::error::未找到可发布的构建产物，请检查 build job 的 artifact 路径"
+            echo "::error::未找到可发布的构建产物"
             exit 1
           fi
 
@@ -186,21 +190,11 @@ jobs:
           fail_on_unmatched_files: true
           body: |
             # CopyApp 发布版本 ${{ github.event.inputs.version || github.ref_name }}
-            
-            ## 更新内容
-            - 优化构建流程
-            - 提升应用稳定性
-            
+
             ## 下载说明
 
-            ### Windows 用户
-            下载 `CopyApp-Windows-*.exe` 安装文件
+            ### Windows
+            下载 `CopyApp-Windows-*.exe`
 
-            ### macOS 用户  
-            下载 `CopyApp-Mac-*.dmg` 安装文件
-
-            ### Linux 用户
-            下载 `CopyApp-Linux-*.AppImage` 文件
-            
             ## 自动更新
             应用支持自动更新，首次安装后会自动检查更新。
