@@ -104,15 +104,34 @@ jobs:
         shell: bash
         timeout-minutes: 60
 
+      # upload-artifact 会遵循 .gitignore，release/** 被忽略导致上传失败
+      - name: 准备上传目录
+        shell: bash
+        run: |
+          mkdir -p ci-artifacts
+          find packages/desktop/release -type f \
+            ! -path "*/win-unpacked/*" \
+            ! -path "*/linux-unpacked/*" \
+            ! -path "*/mac/*" \
+            | while read -r file; do
+              rel="${file#packages/desktop/release/}"
+              mkdir -p "ci-artifacts/$(dirname "$rel")"
+              cp "$file" "ci-artifacts/$rel"
+            done
+
+          echo "=== ci-artifacts 文件列表 ==="
+          find ci-artifacts -type f | sort
+
+          if [ -z "$(find ci-artifacts -type f | head -1)" ]; then
+            echo "::error::未找到构建产物，请检查 electron-builder 输出目录 packages/desktop/release"
+            exit 1
+          fi
+
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ runner.os }}
-          path: |
-            packages/desktop/release/**
-            !packages/desktop/release/**/win-unpacked/**
-            !packages/desktop/release/**/linux-unpacked/**
-            !packages/desktop/release/**/mac/**
+          path: ci-artifacts/
           if-no-files-found: error
 
   release:
