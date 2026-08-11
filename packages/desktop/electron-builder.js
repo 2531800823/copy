@@ -5,6 +5,14 @@
 const path = require('path');
 
 const projectDir = __dirname;
+const hasAppleIdCredentials = Boolean(
+  process.env.APPLE_ID &&
+    process.env.APPLE_APP_SPECIFIC_PASSWORD &&
+    process.env.APPLE_TEAM_ID
+);
+const hasMacSigningIdentity = Boolean(
+  process.env.CSC_LINK || process.env.CSC_NAME
+);
 
 module.exports = {
   appId: 'com.liushipeng.copy',
@@ -44,11 +52,25 @@ module.exports = {
   npmRebuild: false,
   forceCodeSigning: false,
   mac: {
-    target: ['dmg'],
+    // universal 同时支持 Intel 和 Apple Silicon；ZIP 用于 macOS 自动更新。
+    target: [
+      {
+        target: 'dmg',
+        arch: ['universal'],
+      },
+      {
+        target: 'zip',
+        arch: ['universal'],
+      },
+    ],
     icon: 'build/icons/mac/icon.icns',
-
     artifactName: '${productName}-Mac-${version}.${ext}',
     category: 'public.app-category.productivity',
+    hardenedRuntime: true,
+    entitlements: 'build/entitlements.mac.plist',
+    entitlementsInherit: 'build/entitlements.mac.inherit.plist',
+    // 未配置 Apple 凭据时仍允许生成内部测试包；配置后自动执行公证。
+    notarize: hasMacSigningIdentity && hasAppleIdCredentials,
   },
   win: {
     icon: 'build/icons/win/icon.ico',

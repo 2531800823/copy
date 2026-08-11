@@ -27,7 +27,9 @@
     "dev": "npm-run-all --parallel dev:web dev:server",
     "dev:all": "npm-run-all --parallel dev:web dev:server dev:desktop",
     "build:web": "pnpm --filter web build",
-    "build:desktop": "pnpm --filter desktop build:win",
+    "build:desktop": "pnpm --filter desktop build",
+    "build:desktop:win": "pnpm build:web && pnpm --filter desktop build:win",
+    "build:desktop:mac": "pnpm build:web && pnpm --filter desktop build:mac",
     "build": "pnpm build:web && pnpm build:desktop"
   },
   "devDependencies": {

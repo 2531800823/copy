@@ -7,197 +7,173 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '发布版本号 (例如: v1.0.0)'
+        description: '发布版本号（例如 v1.0.0）'
         required: true
         default: v0.0.1
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
   build:
+    name: 构建 ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
+    timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest]
+        include:
+          - name: Windows x64
+            os: windows-latest
+            artifact: windows-x64
+          - name: macOS Universal
+            os: macos-latest
+            artifact: macos-universal
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 设置 pnpm
+        uses: pnpm/action-setup@v4
+
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-
-      - name: 设置 PNPM
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.10.0
-
-      - name: 获取 PNPM 存储目录
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: 设置缓存
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: 安装依赖
         env:
-          # GHA 海外节点使用官方源；避免 .npmrc 国内镜像导致 electron 下载失败
           npm_config_registry: https://registry.npmjs.org/
-        run: |
-          pnpm config set node-linker hoisted
-          pnpm install
+          npm_config_electron_mirror: https://github.com/electron/electron/releases/download/v
+          npm_config_electron_builder_binaries_mirror: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+        run: pnpm install --frozen-lockfile
 
       - name: 解析版本号
         id: version
         shell: bash
+        env:
+          RAW_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            v="${{ github.event.inputs.version }}"
-          else
-            v="${{ github.ref_name }}"
+          set -euo pipefail
+          if [[ ! "$RAW_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::版本号必须采用 v1.2.3 或 v1.2.3-beta.1 格式"
+            exit 1
           fi
-          echo "version=${v#v}" >> "$GITHUB_OUTPUT"
+          echo "version=${RAW_VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: 写入构建版本
+        shell: bash
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const file = 'packages/desktop/package.json';
+            const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+            pkg.version = process.env.APP_VERSION;
+            fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "构建版本: $(node -p "require('./packages/desktop/package.json').version")"
 
       - name: 构建 Web 应用
         run: pnpm build:web
 
-      - name: 构建桌面应用并打包产物
+      - name: 编译 Electron 应用
+        working-directory: packages/desktop
+        run: |
+          pnpm exec tsc
+          pnpm exec vite build
+
+      - name: 构建 Windows 安装包
+        if: runner.os == 'Windows'
+        working-directory: packages/desktop
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ELECTRON_BUILDER_CACHE: false
-          APP_VERSION: ${{ steps.version.outputs.version }}
-          npm_config_registry: https://registry.npmjs.org/
           npm_config_electron_mirror: https://github.com/electron/electron/releases/download/v
           npm_config_electron_builder_binaries_mirror: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+        run: pnpm exec electron-builder --config ./electron-builder.js --win nsis --x64 --publish never
+
+      - name: 构建 macOS 安装包
+        if: runner.os == 'macOS'
+        working-directory: packages/desktop
+        env:
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.MAC_CSC_LINK != '' && 'true' || 'false' }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          npm_config_electron_mirror: https://github.com/electron/electron/releases/download/v
+          npm_config_electron_builder_binaries_mirror: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+        run: pnpm exec electron-builder --config ./electron-builder.js --mac dmg zip --universal --publish never
+
+      - name: 整理构建产物
         shell: bash
-        timeout-minutes: 60
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
+          RELEASE_DIR="packages/desktop/release/$APP_VERSION"
+          ARTIFACT_DIR="ci-artifacts"
 
-          DESKTOP_DIR="$GITHUB_WORKSPACE/packages/desktop"
-          cd "$DESKTOP_DIR"
-
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.version = process.env.APP_VERSION;
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-          echo "构建版本: $(node -p "require('./package.json').version")"
-
-          if [ ! -d ../web/dist ]; then
-            echo "::error::缺少 Web 构建产物 packages/web/dist"
+          if [ ! -d "$RELEASE_DIR" ]; then
+            echo "::error::未找到构建目录 $RELEASE_DIR"
             exit 1
           fi
 
-          # 在 bash 中分步执行，避免 Windows 下 pnpm 用 cmd 跑脚本时 electron-builder 未执行
-          echo ">>> tsc"
-          pnpm exec tsc
-          echo ">>> vite build"
-          pnpm exec vite build
-          echo ">>> electron-builder"
-          pnpm exec electron-builder --project . --config ./electron-builder.js --win nsis
+          mkdir -p "$ARTIFACT_DIR"
+          find "$RELEASE_DIR" -maxdepth 1 -type f \( \
+            -name '*.exe' -o \
+            -name '*.exe.blockmap' -o \
+            -name '*.dmg' -o \
+            -name '*.dmg.blockmap' -o \
+            -name '*.zip' -o \
+            -name '*.zip.blockmap' -o \
+            -name 'latest*.yml' \
+          \) -exec cp {} "$ARTIFACT_DIR/" \;
 
-          resolve_release_root() {
-            for dir in \
-              "$DESKTOP_DIR/release" \
-              "$GITHUB_WORKSPACE/release" \
-              "$GITHUB_WORKSPACE/packages/desktop/release"
-            do
-              if [ -d "$dir" ] && find "$dir" -type f -name "CopyApp-Windows-*.exe" | grep -q .; then
-                echo "$dir"
-                return 0
-              fi
-            done
-            return 1
-          }
+          echo '=== 待上传产物 ==='
+          find "$ARTIFACT_DIR" -maxdepth 1 -type f -print | sort
 
-          RELEASE_ROOT="$(resolve_release_root || true)"
-          if [ -z "$RELEASE_ROOT" ]; then
-            echo "::error::未找到 release 目录或安装包"
-            find "$GITHUB_WORKSPACE" -name "CopyApp-Windows-*.exe" -not -path "*/node_modules/*" || true
-            exit 1
-          fi
-
-          echo "=== release 目录: $RELEASE_ROOT ==="
-          ls -laR "$RELEASE_ROOT"
-
-          mkdir -p "$GITHUB_WORKSPACE/ci-artifacts"
-          while IFS= read -r -d '' file; do
-            rel="${file#"$RELEASE_ROOT"/}"
-            mkdir -p "$GITHUB_WORKSPACE/ci-artifacts/$(dirname "$rel")"
-            cp "$file" "$GITHUB_WORKSPACE/ci-artifacts/$rel"
-          done < <(find "$RELEASE_ROOT" -type f \
-            ! -path "*/win-unpacked/*" \
-            ! -path "*/linux-unpacked/*" \
-            ! -path "*/mac/*" \
-            -print0)
-
-          echo "=== ci-artifacts 文件列表 ==="
-          find "$GITHUB_WORKSPACE/ci-artifacts" -type f | sort
-
-          if [ -z "$(find "$GITHUB_WORKSPACE/ci-artifacts" -type f -print -quit)" ]; then
-            echo "::error::ci-artifacts 为空"
+          if [ -z "$(find "$ARTIFACT_DIR" -maxdepth 1 -type f -print -quit)" ]; then
+            echo "::error::没有找到可上传的构建产物"
             exit 1
           fi
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ runner.os }}
+          name: release-${{ matrix.artifact }}
           path: ci-artifacts/
           if-no-files-found: error
+          retention-days: 7
 
   release:
+    name: 创建 GitHub Release
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
       - name: 下载所有构建产物
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          pattern: release-*
+          path: release-files
+          merge-multiple: true
 
-      - name: 整理发布文件
+      - name: 校验发布文件
         run: |
           set -euo pipefail
-          mkdir -p release-files
-          find artifacts -type f \( \
-            -name "*.exe" -o \
-            -name "*.exe.blockmap" -o \
-            -name "*.dmg" -o \
-            -name "*.dmg.blockmap" -o \
-            -name "*.AppImage" -o \
-            -name "*.deb" -o \
-            -name "*.rpm" -o \
-            -name "*.yml" -o \
-            -name "*.yaml" \
-          \) -exec cp -t release-files/ {} +
-
-          echo "=== 发布文件列表 ==="
-          ls -la release-files/
-
-          if [ -z "$(ls -A release-files)" ]; then
-            echo "::error::未找到可发布的构建产物"
-            exit 1
-          fi
+          echo '=== 发布文件 ==='
+          find release-files -maxdepth 1 -type f -print | sort
+          test -n "$(find release-files -maxdepth 1 -type f -name 'CopyApp-Windows-*.exe' -print -quit)"
+          test -n "$(find release-files -maxdepth 1 -type f -name 'CopyApp-Mac-*.dmg' -print -quit)"
+          test -n "$(find release-files -maxdepth 1 -type f -name 'CopyApp-Mac-*.zip' -print -quit)"
+          test -f release-files/latest.yml
+          test -f release-files/latest-mac.yml
 
       - name: 创建 GitHub Release
         uses: softprops/action-gh-release@v2
@@ -211,12 +187,11 @@ jobs:
           files: release-files/*
           fail_on_unmatched_files: true
           body: |
-            # CopyApp 发布版本 ${{ github.event.inputs.version || github.ref_name }}
+            # CopyApp ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
 
-            ## 下载说明
+            ## 下载
 
-            ### Windows
-            下载 `CopyApp-Windows-*.exe`
+            - Windows：下载 `CopyApp-Windows-*.exe`
+            - macOS（Intel 和 Apple Silicon）：下载 `CopyApp-Mac-*.dmg`
 
-            ## 自动更新
-            应用支持自动更新，首次安装后会自动检查更新。
+            应用同时发布自动更新所需的元数据和差分文件。

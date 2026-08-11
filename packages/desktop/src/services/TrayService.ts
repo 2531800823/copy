@@ -105,21 +105,6 @@ class TrayService {
         }
       }
     });
-
-    // 监听窗口关闭事件，确保托盘图标正确显示
-    if (win) {
-      win.on('close', (event) => {
-        // 阻止默认的关闭行为
-        event.preventDefault();
-
-        logger.info('Tray', '用户点击关闭按钮，执行隐藏操作');
-
-        // 隐藏窗口而不是关闭
-        if (win && !win.isDestroyed()) {
-          win.hide();
-        }
-      });
-    }
   }
 
   createContextMenu() {
@@ -173,8 +158,8 @@ class TrayService {
         label: '退出',
         click: () => {
           logger.info('退出');
-          // 直接退出应用，绕过窗口的 close 事件
-          app.exit(0);
+          // 与 Dock 退出保持一致，执行正常的退出清理流程。
+          app.quit();
         },
       },
     ]);

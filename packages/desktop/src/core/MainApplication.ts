@@ -15,7 +15,6 @@ import logger from '../services/LoggerService';
 import {Config} from './Config';
 import {initRegisterServices} from './container';
 import {ElectronNativeEventManager} from './ElectronNativeEventManager';
-import {WindowManager} from './WindowManager';
 
 /**
  * 主应用类
@@ -35,7 +34,6 @@ export class MainApplication {
 
   // 核心管理器实例
   private _nativeEventManager = new ElectronNativeEventManager();
-  private _windowManager = WindowManager.getInstance();
 
   /**
    * 构造函数
@@ -326,9 +324,16 @@ export class MainApplication {
    * 应用激活时的处理
    */
   private async _onActivate(): Promise<void> {
-    if (this._windowManager.count() === 0) {
-      await this._createMainWindow();
+    if (this._mainWindow && !this._mainWindow.isDestroyed()) {
+      if (this._mainWindow.isMinimized()) {
+        this._mainWindow.restore();
+      }
+      this._mainWindow.show();
+      this._mainWindow.focus();
+      return;
     }
+
+    await this._createMainWindow();
   }
 
   /**
@@ -393,21 +398,38 @@ export class MainApplication {
       this._mainWindow = null;
     });
 
-    // 设置窗口关闭前事件，实现点击关闭按钮时最小化而不是关闭
+    // 统一处理窗口关闭：应用退出时放行，普通关闭时按配置隐藏或最小化。
     this._mainWindow.on('close', (event) => {
-      // 阻止默认的关闭行为
+      if (this._isQuitting) {
+        logger.info(
+          'MainApplication',
+          `应用正在退出，允许关闭窗口 (ID: ${this._mainWindow?.id})`
+        );
+        return;
+      }
+
+      const closeButtonBehavior = windowConfig.closeButtonBehavior;
+      if (closeButtonBehavior === 'quit') {
+        logger.info(
+          'MainApplication',
+          `用户点击关闭按钮，退出应用 (ID: ${this._mainWindow?.id})`
+        );
+        app.quit();
+        return;
+      }
+
       event.preventDefault();
 
       logger.info(
         'MainApplication',
-        `用户点击关闭按钮，执行最小化操作 (ID: ${this._mainWindow?.id})`
+        `用户点击关闭按钮，执行${closeButtonBehavior === 'hide' ? '隐藏' : '最小化'}操作 (ID: ${this._mainWindow?.id})`
       );
 
-      // 最小化窗口而不是关闭
-      this._mainWindow?.minimize();
-
-      // 可选：隐藏到系统托盘
-      // this._mainWindow?.hide();
+      if (closeButtonBehavior === 'hide') {
+        this._mainWindow?.hide();
+      } else {
+        this._mainWindow?.minimize();
+      }
     });
 
     // 加载页面

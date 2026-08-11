@@ -12,11 +12,12 @@
   "scripts": {
     "dev": "pnpm clean && node ./scripts/set-utf8.js && vite",
     "clean": "rimraf dist-electron",
+    "clean:release": "rimraf release",
     "build": "pnpm clean && tsc && vite build && electron-builder",
     "build:dir": "tsc && vite build && electron-builder --config ./electron-builder.js --dir",
     "build:win": "tsc && vite build && pnpm exec electron-builder --config ./electron-builder.js --win nsis",
     "build:win:release": "pnpm build:win && pnpm release",
-    "build:mac": "tsc && vite build && electron-builder --mac",
+    "build:mac": "pnpm clean:release && tsc && vite build && pnpm exec electron-builder --config ./electron-builder.js --mac",
     "build:linux": "tsc && vite build && electron-builder --linux",
     "publish": "tsc && vite build && electron-builder --publish always",
     "publish:win": "tsc && vite build && electron-builder --win --publish always",
