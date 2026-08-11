@@ -10,7 +10,7 @@
   },
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "pnpm clean && chcp 65001 >nul 2>&1 && vite",
+    "dev": "pnpm clean && node ./scripts/set-utf8.js && vite",
     "clean": "rimraf dist-electron",
     "build": "pnpm clean && tsc && vite build && electron-builder",
     "build:dir": "tsc && vite build && electron-builder --config ./electron-builder.js --dir",
